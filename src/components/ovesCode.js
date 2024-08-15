@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 const demoTimeSpans = [
   { start: "08:00", end: "08:15", travel: false },
@@ -18,8 +18,10 @@ export default function OveSlider(props) {
   const [start, setStart] = useState(); //object array - to render a div - so its scalable with multiple div
   const [end, setEnd] = useState();
   const [isMouseDown, setIsMouseDown] = useState(false);
-  // const yMouseDownRef = React.createRef();
 
+  const startXRef = useRef(null);
+  const endXRef = useRef(null);
+  // const yMouseDownRef = React.createRef();
   // console.log("dummydata outside any functions", dummyData);
   // console.log("time", time);
   // console.log("start", start);
@@ -34,7 +36,7 @@ export default function OveSlider(props) {
     let fifteenMinutes = Math.round(((hoursDecimal - hours) * 60) / 15) * 15;
     // let fiveMinutes = Math.round(((hoursDecimal - hours) * 60) / 5) * 5;
     // let oneMinute = Math.round(((hoursDecimal - hours) * 60) / 1) * 1;
-
+    console.log(fifteenMinutes);
     // const yOffset = e.clientY - yMouseDownRef.current;
 
     if (fifteenMinutes === 60) {
@@ -62,18 +64,40 @@ export default function OveSlider(props) {
   function clockIn(e) {
     // let relativeYStartPosition = e.clientY;
     setStart(time);
+    startXRef.current = e.nativeEvent.offsetX;
     // yMouseDownRef.current = relativeYStartPosition;
     setIsMouseDown(true);
   }
 
-  function clockOut() {
+  function clockOut(e) {
+    endXRef.current = e.nativeEvent.offsetX;
     if (isMouseDown) {
       setDummyData([...dummyData, { start: start, end: time }]);
+    }
+    if (startXRef.current !== null) {
+      startXRef.current = null;
+      endXRef.current = null;
     }
     setEnd(time);
     setIsMouseDown(false);
     // console.log("dummydata inside clockOUT", dummyData);
   }
+
+  const calculateLeftPosition = (startTime) => {
+    const [hours, minutes] = startTime.split(":").map(Number);
+    const startDecimal = hours + minutes / 60;
+    const positionFactor = (startDecimal - 8) / 4; // Assuming the range is from 8 to 12
+    return positionFactor * 480; // Assuming the total width is 480px
+  };
+
+  const calculateWidth = (startTime, endTime) => {
+    const [startHours, startMinutes] = startTime.split(":").map(Number);
+    const [endHours, endMinutes] = endTime.split(":").map(Number);
+    const startDecimal = startHours + startMinutes / 60;
+    const endDecimal = endHours + endMinutes / 60;
+    const widthFactor = (endDecimal - startDecimal) / 4; // Assuming the range is from 8 to 12
+    return widthFactor * 480; // Assuming the total width is 480px
+  };
 
   return (
     <div>
@@ -121,22 +145,30 @@ export default function OveSlider(props) {
         ></div>
         <div>
           {dummyData.map((object, index) => {
+            const left = calculateLeftPosition(object.start);
+            const width = calculateWidth(object.start, object.end);
             return (
               <React.Fragment>
                 <div
                   key={`${object.start}-${object.end}-${index}`}
                   style={{
-                    position: "static",
-                    left: "150px",
-                    top: "130px",
-                    width: "200px",
+                    display: "inline-block",
+                    position: "relative",
+                    left: `${left}px`,
+                    top: "0px",
+                    width: `${width}px`,
                     height: "30px",
                     backgroundColor: "lightblue",
-                    zIndex: -2,
+                    zIndex: -1,
                   }}
                 >
-                  <div>{object.start}</div>
-                  <div>{object.end}</div>
+                  <div
+                    style={{
+                      position: "fixed",
+                    }}
+                  >
+                    {object.start} - {object.end}
+                  </div>
                 </div>
               </React.Fragment>
             );
