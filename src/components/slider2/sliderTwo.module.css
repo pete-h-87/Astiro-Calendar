@@ -1,0 +1,18 @@
+/* WorkHourLogger.module.css */
+.sliderContainer {
+    position: relative;
+    width: 300px;
+    height: 100px;
+  }
+  
+  .slider {
+    type: range;
+    width: 100%;
+  }
+  
+  .precisionButton {
+    type: radio;
+    position: absolute;
+    bottom: 0;
+  }
+  
