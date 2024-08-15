@@ -12,7 +12,7 @@ const demoTimeSpans = [
 // const initialTimeSpan = { start: "", end: "" };
 
 export default function OveSlider(props) {
-  const [dummyData, setDummyData] = useState(demoTimeSpans);
+  const [dummyData, setDummyData] = useState([]);
   // const [newTimeSpan, setNewTimeSpan] = useState(initialTimeSpan);
   const [time, setTime] = useState();
   const [start, setStart] = useState(); //object array - to render a div - so its scalable with multiple div
@@ -119,11 +119,43 @@ export default function OveSlider(props) {
             zIndex: -1,
           }}
         ></div>
+        <div>
+          {dummyData.map((object, index) => {
+            return (
+              <React.Fragment>
+                <div
+                  key={`${object.start}-${object.end}-${index}`}
+                  style={{
+                    position: "static",
+                    left: "150px",
+                    top: "130px",
+                    width: "200px",
+                    height: "30px",
+                    backgroundColor: "lightblue",
+                    zIndex: -2,
+                  }}
+                >
+                  <div>{object.start}</div>
+                  <div>{object.end}</div>
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
       </div>
 
       <div>Time={time}</div>
       <div>Start={start}</div>
       <div>End={end}</div>
+
+      {/* <div>
+        {dummyData.map((object, index) => (
+          <React.Fragment key={`${object.start}-${object.end}-${index}`}>
+            <div>{object.start}</div>
+            <div>{object.end}</div>
+          </React.Fragment>
+        ))}
+      </div> */}
     </div>
   );
 }
