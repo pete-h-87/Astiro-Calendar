@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 const demoTimeSpans = [
   { start: "08:00", end: "08:15", travel: false },
@@ -6,28 +6,24 @@ const demoTimeSpans = [
   { start: "08:30", end: "08:45", travel: false },
 ];
 
-const dummyDataSpans = [{ start: "xxx", end: "yyy" }];
+// const dummyDataSpans = [{ start: "xxx", end: "yyy" }];
 
 // {start: '08:00', end: '08:15', travel: false, type: timeSpanType.Office},
-const initialTimeSpan = { start: "", end: "" };
+// const initialTimeSpan = { start: "", end: "" };
 
 export default function OveSlider(props) {
   const [dummyData, setDummyData] = useState(demoTimeSpans);
-  const [newTimeSpan, setNewTimeSpan] = useState(initialTimeSpan);
+  // const [newTimeSpan, setNewTimeSpan] = useState(initialTimeSpan);
   const [time, setTime] = useState();
-  // const [start, setStart] = useState(); //object array - to render a div - so its scalable with multiple div
-  // const [end, setEnd] = useState();
+  const [start, setStart] = useState(); //object array - to render a div - so its scalable with multiple div
+  const [end, setEnd] = useState();
   const [isMouseDown, setIsMouseDown] = useState(false);
+  // const yMouseDownRef = React.createRef();
 
-  const yMouseDownRef = React.createRef();
   // console.log("dummydata outside any functions", dummyData);
   // console.log("time", time);
   // console.log("start", start);
   // console.log("end", end);
-  // useEffect(() => {
-  //   setDummyData([...dummyData, { start: start, end: end }]);
-  //   console.log("dummyData", dummyData);
-  // }, [end]);
 
   function canvasMouseMove(e) {
     let relativeXPos = e.clientX - e.target.offsetLeft;
@@ -39,7 +35,7 @@ export default function OveSlider(props) {
     // let fiveMinutes = Math.round(((hoursDecimal - hours) * 60) / 5) * 5;
     // let oneMinute = Math.round(((hoursDecimal - hours) * 60) / 1) * 1;
 
-    const yOffset = e.clientY - yMouseDownRef.current;
+    // const yOffset = e.clientY - yMouseDownRef.current;
 
     if (fifteenMinutes === 60) {
       fifteenMinutes = 0;
@@ -64,52 +60,20 @@ export default function OveSlider(props) {
   }
 
   function clockIn(e) {
-    let relativeYStartPosition = e.clientY;
-    // setStart(time);
-    // setNewTimeSpan({ ...newTimeSpan, start: start });
-    setNewTimeSpan({ ...newTimeSpan, start: time });
-    yMouseDownRef.current = relativeYStartPosition;
+    // let relativeYStartPosition = e.clientY;
+    setStart(time);
+    // yMouseDownRef.current = relativeYStartPosition;
     setIsMouseDown(true);
   }
 
-  // function clockOut() {
-  //   // setEnd(time);
-  //   // console.log("timeSpan: ", newTimeSpan);
-  //   console.log("isMouseDown", isMouseDown);
-  //   if (isMouseDown) {
-  //     // const completedTimeSpan = { ...newTimeSpan, end: time };
-  //     console.log("inside if");
-  //     console.log("end", time, typeof time);
-  //     setNewTimeSpan({ ...newTimeSpan, end: time });
-  //     console.log("newTimeSpan", newTimeSpan);
-  //     setDummyData([...dummyData, newTimeSpan]);
-  //     console.log("dummyData", dummyData);
-  //     setNewTimeSpan(initialTimeSpan); // Reset for the next time span
-  //   }
-  //   // setStart(null);
-  //   // setEnd(null);
-  //   setIsMouseDown(false);
-  //   console.log("no time span :(");
-  // }
-
   function clockOut() {
     if (isMouseDown) {
-      // Create a new time span object with the updated end time
-      const completedTimeSpan = { ...newTimeSpan, end: time };
-
-      // Update dummyData with the new time span using the callback version of setState
-      setDummyData((prevDummyData) => [...prevDummyData, completedTimeSpan]);
-
-      // Reset the newTimeSpan state to initial
-      setNewTimeSpan(initialTimeSpan);
+      setDummyData([...dummyData, { start: start, end: time }]);
     }
-    console.log("dummyData", dummyData);
+    setEnd(time);
     setIsMouseDown(false);
+    // console.log("dummydata inside clockOUT", dummyData);
   }
-
-  // useEffect(() => {
-  //   setDummyData([...dummyData, newTimeSpan]);
-  // }, [newTimeSpan]);
 
   return (
     <div>
@@ -158,8 +122,8 @@ export default function OveSlider(props) {
       </div>
 
       <div>Time={time}</div>
-      <div>Start={newTimeSpan.start}</div>
-      <div>End={newTimeSpan.end}</div>
+      <div>Start={start}</div>
+      <div>End={end}</div>
     </div>
   );
 }
