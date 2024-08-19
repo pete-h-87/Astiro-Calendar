@@ -33,16 +33,15 @@ const defaultData = [
 
 export default function Slider4(props) {
   const [time, setTime] = useState();
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
   const [canvasWidth, setCanvasWidth] = useState(0);
   const [canvasMargin, setCanvasMargin] = useState(0);
 
-  const startTimeRef = useRef();
-  //   const endTimeRef = useRef();
-  //   const mouseMoveMode = useRef("");
-  //   const mouseDown = useRef(false);
   const canvasRef = useRef(null);
+  const draggingRef = useRef(false);
+  const startTimeRef = useRef();
+  const endTimeRef = useRef();
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -54,16 +53,61 @@ export default function Slider4(props) {
     }
   }, []);
 
-  function timeConvertToXpos (timeNumber) {
+  function timeConvertToXpos(timeNumber) {
     const positionX = (timeNumber / 24) * canvasWidth + canvasMargin;
     return positionX;
-  };
+  }
+
+  function xPosConvertToTime(xPos) {
+    let relativePos = xPos.clientX - xPos.target.offsetLeft;
+    let totalWidth = xPos.target.offsetWidth;
+    let positionFactor = relativePos / totalWidth;
+    let hoursDecimal = 24 * positionFactor;
+    return hoursDecimal;
+  }
 
   function pad(num, size) {
     num = num.toString();
     while (num.length < size) num = "0" + num;
     return num;
   }
+
+  function setNewTimeSpanMouseDown(e) {
+    if (e.target.id === "canvas") {
+      startTimeRef.current = xPosConvertToTime(e);
+      endTimeRef.current = startTimeRef.current;
+      draggingRef.current = true;
+    }
+  }
+
+  function setNewTimeSpanMouseMove(e) {
+    if (draggingRef.current) {
+      endTimeRef.current = xPosConvertToTime(e);
+    } else {
+      let hoursDecimal = xPosConvertToTime(e);
+      let hours = Math.floor(hoursDecimal);
+      let minutes = hoursDecimal - hours;
+      minutes = minutes * 60;
+      minutes = Math.round(minutes / 5) * 5;
+      setTime(pad(hours, 2) + ":" + pad(minutes, 2));
+    }
+  }
+
+  const setNewTimeSpanMouseUp = (e) => {
+    if (draggingRef.current) {
+      draggingRef.current = false;
+      if (startTimeRef.current !== null && endTimeRef.current !== null) {
+        let newItem = {
+          ID: datasource.length + 1,
+          Start: Math.min(startTimeRef.current, endTimeRef.current),
+          End: Math.max(startTimeRef.current, endTimeRef.current),
+          Text: "New Event",
+          Status: "N",
+        };
+        setDatasource([...datasource, newItem]);
+      }
+    }
+  };
 
   function canvasMouseMove(e) {
     let relativePos = e.clientX - e.target.offsetLeft;
@@ -75,6 +119,22 @@ export default function Slider4(props) {
     minutes = minutes * 60;
     minutes = Math.round(minutes / 5) * 5;
     setTime(pad(hours, 2) + ":" + pad(minutes, 2));
+  }
+
+  function existingTimeSpanMouseDown(e) {
+    let id = e.target.dataset.id;
+
+    // Find the item that was clicked
+    console.log(id);
+
+    if (id) {
+      const parsedId = parseInt(id, 10);
+      if (selectedItemId === parsedId) {
+        setSelectedItemId(null); // Deselect if the same item is clicked
+      } else {
+        setSelectedItemId(parsedId); // Select the new item
+      }
+    }
   }
 
   return (
@@ -108,13 +168,11 @@ export default function Slider4(props) {
                 timeConvertToXpos(item.End) - timeConvertToXpos(item.Start),
               height: "40px",
               backgroundColor: item.Status === "W" ? "red" : "blue",
-              border:
-                selectedItem && selectedItem.ID === item.ID
-                  ? "4px solid green"
-                  : "2px solid black",
+              border: selectedItemId === item.ID ? "4px solid green" : "none",
               borderRadius: "5px",
             }}
             title={item.Text}
+            onMouseDown={existingTimeSpanMouseDown}
             //   onMouseDown={timespanMouseDown}
             //   onMouseUp={canvasMouseUp}
             //   onMouseMove={timespanMouseMove}
@@ -122,7 +180,7 @@ export default function Slider4(props) {
         ))}
       </div>
       <div>Time={time}</div>
-      <div>SelectedData:{JSON.stringify(selectedItem)}</div>
+      <div>SelectedData:{JSON.stringify(selectedItemId)}</div>
     </div>
   );
 }
