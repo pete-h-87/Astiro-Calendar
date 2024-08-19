@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const demoTimeSpans = [
   { start: "08:00", end: "08:15", travel: false },
@@ -19,6 +19,10 @@ export default function OveSlider(props) {
   const [end, setEnd] = useState();
   const [isMouseDown, setIsMouseDown] = useState(false);
 
+  // useEffect(() => {
+  //   console.log("Initial render - time:", time);
+  // }, [time]);
+
   const startXRef = useRef(null);
   const endXRef = useRef(null);
   // const yMouseDownRef = React.createRef();
@@ -26,6 +30,8 @@ export default function OveSlider(props) {
   // console.log("time", time);
   // console.log("start", start);
   // console.log("end", end);
+
+  // show keyboard shortcuts for the user
 
   function canvasMouseMove(e) {
     let relativeXPos = e.clientX - e.target.offsetLeft;
@@ -36,23 +42,21 @@ export default function OveSlider(props) {
     let fifteenMinutes = Math.round(((hoursDecimal - hours) * 60) / 15) * 15;
     // let fiveMinutes = Math.round(((hoursDecimal - hours) * 60) / 5) * 5;
     // let oneMinute = Math.round(((hoursDecimal - hours) * 60) / 1) * 1;
-    console.log(fifteenMinutes);
+
     // const yOffset = e.clientY - yMouseDownRef.current;
+
+    // console.log("hoursDecimal:", hoursDecimal);
+    // console.log("hours:", hours);
+    // console.log("fifteenMinutes before adjustment:", fifteenMinutes);
 
     if (fifteenMinutes === 60) {
       fifteenMinutes = 0;
       hours++;
     }
-    setTime(pad(hours, 2) + ":" + pad(fifteenMinutes, 2));
 
-    //   if (isMouseDown) {
-    //     if (yOffset > 150) {
-    //       setTime(pad(hours, 2) + ":" + pad(fiveMinutes, 2));
-    //     }
-    //     if (yOffset > 250) {
-    //       setTime(pad(hours, 2) + ":" + pad(oneMinute, 2));
-    //     }
-    //   }
+    // console.log("fifteenMinutes after adjustment:", fifteenMinutes);
+
+    setTime(pad(hours, 2) + ":" + pad(fifteenMinutes, 2));
   }
 
   function pad(num, size) {
@@ -71,6 +75,8 @@ export default function OveSlider(props) {
 
   function clockOut(e) {
     endXRef.current = e.nativeEvent.offsetX;
+    setEnd(time);
+    setIsMouseDown(false);
     if (isMouseDown) {
       setDummyData([...dummyData, { start: start, end: time }]);
     }
@@ -78,9 +84,6 @@ export default function OveSlider(props) {
       startXRef.current = null;
       endXRef.current = null;
     }
-    setEnd(time);
-    setIsMouseDown(false);
-    // console.log("dummydata inside clockOUT", dummyData);
   }
 
   const calculateLeftPosition = (startTime) => {
@@ -147,6 +150,7 @@ export default function OveSlider(props) {
           {dummyData.map((object, index) => {
             const left = calculateLeftPosition(object.start);
             const width = calculateWidth(object.start, object.end);
+            console.log(time);
             return (
               <React.Fragment>
                 <div

@@ -4,7 +4,8 @@
 // import Slider from "./components/slider2/Slider_two";
 import "./global.css";
 // import Grid from "./components/react-window/Timesheet";
-import OveSlider from "./components/ovesCode";
+import Selector from "./components/slider_three/selector";
+import Slider4 from "./components/slider4/slider4";
 
 function App(props) {
   return (
@@ -17,7 +18,7 @@ function App(props) {
         onChange={({ min, max }) => console.log(`min = ${min}, max = ${max}`)}
       /> */}
       {/* // <Slider /> */}
-      <OveSlider />
+      <Slider4 />
       {/* </Layout> */}
     </div>
   );
