@@ -35,18 +35,47 @@ export default function Slider4(props) {
   const [time, setTime] = useState();
   const [selectedItem, setSelectedItem] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
+  const [canvasWidth, setCanvasWidth] = useState(0);
+  const [canvasMargin, setCanvasMargin] = useState(0);
 
-  //   const startTimeRef = useRef();
+  const startTimeRef = useRef();
   //   const endTimeRef = useRef();
   //   const mouseMoveMode = useRef("");
   //   const mouseDown = useRef(false);
   const canvasRef = useRef(null);
 
-  const timeConvertToXpos = (timeNumber) => {
-    const positionX = (timeNumber / 24) * 510 + 100;
+  useEffect(() => {
+    if (canvasRef.current) {
+      setCanvasWidth(canvasRef.current.offsetWidth);
+      const computedStyle = getComputedStyle(canvasRef.current);
+      const marginLeft = parseInt(computedStyle.marginLeft, 10);
+      setCanvasMargin(marginLeft);
+      console.log(canvasRef.current.offsetWidth);
+    }
+  }, []);
+
+  function timeConvertToXpos (timeNumber) {
+    const positionX = (timeNumber / 24) * canvasWidth + canvasMargin;
     return positionX;
-    console.log(positionX);
   };
+
+  function pad(num, size) {
+    num = num.toString();
+    while (num.length < size) num = "0" + num;
+    return num;
+  }
+
+  function canvasMouseMove(e) {
+    let relativePos = e.clientX - e.target.offsetLeft;
+    let totalWidth = e.target.offsetWidth;
+    let positionFactor = relativePos / totalWidth;
+    let hoursDecimal = 24 * positionFactor;
+    let hours = Math.floor(hoursDecimal);
+    let minutes = hoursDecimal - hours;
+    minutes = minutes * 60;
+    minutes = Math.round(minutes / 5) * 5;
+    setTime(pad(hours, 2) + ":" + pad(minutes, 2));
+  }
 
   return (
     <div>
@@ -65,6 +94,7 @@ export default function Slider4(props) {
           }}
           id="canvas"
           ref={canvasRef}
+          onMouseMove={canvasMouseMove}
         />
         {datasource.map((item) => (
           <div

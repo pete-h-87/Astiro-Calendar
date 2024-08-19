@@ -100,7 +100,7 @@ export default function Selector(props) {
       Text: "",
       Status: "",
     };
-    newState.push(newItem);
+    newState.push(newItem); //can't push into a state, its immutable
     setDatasource(newState);
     setSelectedItem(newItem);
     mouseMoveMode.current = "newItemEnd";
