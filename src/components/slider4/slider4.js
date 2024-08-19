@@ -32,27 +32,21 @@ const defaultData = [
 ];
 
 export default function Slider4(props) {
+  //states and references
   const [time, setTime] = useState();
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
   const [canvasWidth, setCanvasWidth] = useState(0);
   const [canvasMargin, setCanvasMargin] = useState(0);
+  const [newTimeSpan, setNewTimeSpan] = useState(null);
 
   const canvasRef = useRef(null);
   const draggingRef = useRef(false);
   const startTimeRef = useRef();
   const endTimeRef = useRef();
+  //end of states and references
 
-  useEffect(() => {
-    if (canvasRef.current) {
-      setCanvasWidth(canvasRef.current.offsetWidth);
-      const computedStyle = getComputedStyle(canvasRef.current);
-      const marginLeft = parseInt(computedStyle.marginLeft, 10);
-      setCanvasMargin(marginLeft);
-      console.log(canvasRef.current.offsetWidth);
-    }
-  }, []);
-
+  //helper functions
   function timeConvertToXpos(timeNumber) {
     const positionX = (timeNumber / 24) * canvasWidth + canvasMargin;
     return positionX;
@@ -71,53 +65,93 @@ export default function Slider4(props) {
     while (num.length < size) num = "0" + num;
     return num;
   }
+  //end of helper functions
 
-  function setNewTimeSpanMouseDown(e) {
-    if (e.target.id === "canvas") {
-      startTimeRef.current = xPosConvertToTime(e);
-      endTimeRef.current = startTimeRef.current;
-      draggingRef.current = true;
+  useEffect(() => {
+    if (canvasRef.current) {
+      setCanvasWidth(canvasRef.current.offsetWidth);
+      const computedStyle = getComputedStyle(canvasRef.current);
+      const marginLeft = parseInt(computedStyle.marginLeft, 10);
+      setCanvasMargin(marginLeft); //maybe turn into a ref
+      console.log(canvasRef.current.offsetWidth);
     }
-  }
 
-  function setNewTimeSpanMouseMove(e) {
-    if (draggingRef.current) {
-      endTimeRef.current = xPosConvertToTime(e);
-    } else {
-      let hoursDecimal = xPosConvertToTime(e);
-      let hours = Math.floor(hoursDecimal);
-      let minutes = hoursDecimal - hours;
-      minutes = minutes * 60;
-      minutes = Math.round(minutes / 5) * 5;
-      setTime(pad(hours, 2) + ":" + pad(minutes, 2));
-    }
-  }
-
-  const setNewTimeSpanMouseUp = (e) => {
-    if (draggingRef.current) {
-      draggingRef.current = false;
-      if (startTimeRef.current !== null && endTimeRef.current !== null) {
-        let newItem = {
-          ID: datasource.length + 1,
-          Start: Math.min(startTimeRef.current, endTimeRef.current),
-          End: Math.max(startTimeRef.current, endTimeRef.current),
+    function newTimeSpanMouseDown(e) {
+      if (e.target.id === "canvas") {
+        startTimeRef.current = xPosConvertToTime(e);
+        endTimeRef.current = startTimeRef.current;
+        draggingRef.current = true;
+        setNewTimeSpan({
+          Id: 5, //change
+          Start: startTimeRef.current,
+          End: endTimeRef.current,
           Text: "New Event",
-          Status: "N",
-        };
-        setDatasource([...datasource, newItem]);
+          Status: "W",
+        });
       }
     }
-  };
+
+    function newTimeSpanMouseMove(e) {
+      if (draggingRef.current) {
+        //isDraggingRef
+        endTimeRef.current = xPosConvertToTime(e);
+        setNewTimeSpan({
+          ...newTimeSpan,
+          End: endTimeRef.current,
+        });
+      } else {
+        let hoursDecimal = xPosConvertToTime(e);
+        let hours = Math.floor(hoursDecimal);
+        let minutes = hoursDecimal - hours;
+        minutes = minutes * 60;
+        minutes = Math.round(minutes / 5) * 5;
+        setTime(pad(hours, 2) + ":" + pad(minutes, 2));
+      } //datasource.find function to search an array to see if we are bumping into another rendered div
+    }
+
+    //actual moving divs around - limit the moving and be able to move
+    //change curser when clicked down to indicate to user that they can move horizontally
+    //changing sizes of divs with mover marker curser
+    // when hovering over the edge of a div, like an end piont, a box appears showing the time
+
+    const newTimeSpanMouseUp = (e) => {
+      if (draggingRef.current) {
+        draggingRef.current = false;
+        if (startTimeRef.current && endTimeRef.current) {
+          let newItem = {
+            ID: datasource.length + 1,
+            Start: Math.min(startTimeRef.current, endTimeRef.current),
+            End: Math.max(startTimeRef.current, endTimeRef.current),
+            Text: "New Event",
+            Status: "N",
+          };
+          setDatasource([...datasource, newItem]);
+          setNewTimeSpan(null);
+        }
+      }
+    };
+
+    canvasRef.current.addEventListener("mousedown", newTimeSpanMouseDown);
+    document.addEventListener("mousemove", newTimeSpanMouseMove);
+    document.addEventListener("mouseup", newTimeSpanMouseUp);
+
+    return () => {
+      canvasRef.current.removeEventListener("mousedown", newTimeSpanMouseDown);
+      document.removeEventListener("mousemove", newTimeSpanMouseMove);
+      document.removeEventListener("mouseup", newTimeSpanMouseUp);
+    };
+  }, [datasource, newTimeSpan]);
 
   function canvasMouseMove(e) {
-    let relativePos = e.clientX - e.target.offsetLeft;
-    let totalWidth = e.target.offsetWidth;
+    let relativePos = e.clientX - canvasRef.current.offsetLeft;
+    let totalWidth = canvasRef.current.offsetWidth;
     let positionFactor = relativePos / totalWidth;
     let hoursDecimal = 24 * positionFactor;
     let hours = Math.floor(hoursDecimal);
     let minutes = hoursDecimal - hours;
     minutes = minutes * 60;
     minutes = Math.round(minutes / 5) * 5;
+
     setTime(pad(hours, 2) + ":" + pad(minutes, 2));
   }
 
@@ -178,9 +212,28 @@ export default function Slider4(props) {
             //   onMouseMove={timespanMouseMove}
           ></div>
         ))}
+        {newTimeSpan ? (
+          <div
+            key={newTimeSpan.ID}
+            data-id={newTimeSpan.ID}
+            style={{
+              position: "absolute",
+              left: timeConvertToXpos(newTimeSpan.Start),
+              top: "130px",
+              width:
+                timeConvertToXpos(newTimeSpan.End) -
+                timeConvertToXpos(newTimeSpan.Start),
+              height: "40px",
+              backgroundColor: newTimeSpan.Status === "W" ? "red" : "blue",
+              border:
+                selectedItemId === newTimeSpan.ID ? "4px solid green" : "none",
+              borderRadius: "5px",
+            }}
+          ></div>
+        ) : null}
       </div>
       <div>Time={time}</div>
-      <div>SelectedData:{JSON.stringify(selectedItemId)}</div>
+      <div>SelectedData - Id:{JSON.stringify(selectedItemId)}</div>
     </div>
   );
 }

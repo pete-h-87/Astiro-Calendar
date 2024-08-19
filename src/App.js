@@ -20,6 +20,7 @@ function App(props) {
       {/* // <Slider /> */}
       <Slider4 />
       {/* </Layout> */}
+      {/* <Selector /> */}
     </div>
   );
 }
