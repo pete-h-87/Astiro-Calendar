@@ -32,19 +32,25 @@ const defaultData = [
 ];
 
 export default function Slider4(props) {
-  //states and references
+  //states
   const [time, setTime] = useState();
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
   const [canvasWidth, setCanvasWidth] = useState(0);
   const [canvasMargin, setCanvasMargin] = useState(0);
   const [newTimeSpan, setNewTimeSpan] = useState(null);
+  //end of states
 
+  //refs
   const canvasRef = useRef(null);
   const draggingRef = useRef(false);
   const startTimeRef = useRef();
   const endTimeRef = useRef();
-  //end of states and references
+
+  const spanDivRef = useRef(null);
+  const refLeft = useRef(null);
+  const refRight = useRef(null);
+  //end of refs
 
   //helper functions
   function timeConvertToXpos(timeNumber) {
@@ -67,6 +73,70 @@ export default function Slider4(props) {
   }
   //end of helper functions
 
+  // useEffect(() => {
+  //   const resizableElement = spanDivRef.current;
+  //   const styles = window.getComputedStyle(resizableElement);
+  //   let width = parseInt(styles.width, 10);
+
+  //   let xCord = 0;
+  //   resizableElement.style.left = "150px";
+
+  //   //LEFT RESIZE
+  //   function onMouseDown_LeftResize(e) {
+  //     xCord = e.clientX;
+  //     resizableElement.style.left = styles.left;
+  //     resizableElement.style.right = null;
+  //     document.addEventListener("mousemove", onMouseMove_LeftResize);
+  //     document.addEventListener("mouseup", onMouseUp_LeftResize);
+  //   }
+
+  //   function onMouseMove_LeftResize(e) {
+  //     xCord = e.clientX;
+  //     const dx = e.clientX - xCord;
+  //     width = width - dx;
+  //     resizableElement.style.width = `${width}px`;
+  //   }
+
+  //   function onMouseUp_LeftResize(e) {
+  //     document.removeEventListener("mousemove", onMouseMove_LeftResize);
+  //   }
+  //   //END OF LEFT RESIZE
+
+  //   //RIGHT RESIZE
+  //   function onMouseDown_RightResize(e) {
+  //     xCord = e.End;
+  //     resizableElement.style.right = styles.right;
+  //     resizableElement.style.left = null;
+  //     document.addEventListener("mousemove", onMouseMove_RightResize);
+  //     document.addEventListener("mouseup", onMouseUp_RightResize);
+  //   }
+
+  //   function onMouseMove_RightResize(e) {
+  //     xCord = e.clientX;
+  //     const dx = e.clientX - xCord;
+  //     width = width + dx;
+  //     resizableElement.style.width = `${width}px`;
+  //   }
+
+  //   function onMouseUp_RightResize(e) {
+  //     document.removeEventListener("mousemove", onMouseMove_RightResize);
+  //   }
+  //   //END OF RIGHT RESIZE
+
+  //   //ADD mouseDown event listeners
+  //   const resizerLeft = refRight.current;
+  //   resizerLeft.addEventListener("mousedown", onMouseDown_LeftResize);
+
+  //   const resizerRight = refLeft.current;
+  //   resizerRight.addEventListener("mousedown", onMouseDown_RightResize);
+  //   //REMOVE event listeners
+
+  //   return () => {
+  //     resizerLeft.removeEventListener("mousedown", onMouseDown_LeftResize);
+  //     resizerRight.removeEventListener("mousedown", onMouseDown_RightResize);
+  //   }
+  // }, []);
+
   useEffect(() => {
     if (canvasRef.current) {
       setCanvasWidth(canvasRef.current.offsetWidth);
@@ -85,7 +155,7 @@ export default function Slider4(props) {
           Id: 5, //change
           Start: startTimeRef.current,
           End: endTimeRef.current,
-          Text: "New Event",
+          Text: "New XXX",
           Status: "W",
         });
       }
@@ -99,8 +169,7 @@ export default function Slider4(props) {
           ...newTimeSpan,
           End: endTimeRef.current,
         });
-      } else {
-        let hoursDecimal = xPosConvertToTime(e);
+        let hoursDecimal = xPosConvertToTime(e); //**MOVED THIS OUT OF AN ELSE - was attached to whole doc...
         let hours = Math.floor(hoursDecimal);
         let minutes = hoursDecimal - hours;
         minutes = minutes * 60;
@@ -115,14 +184,14 @@ export default function Slider4(props) {
     // when hovering over the edge of a div, like an end piont, a box appears showing the time
 
     const newTimeSpanMouseUp = (e) => {
-      if (draggingRef.current) {
+      if (draggingRef.current && canvasRef.current) {
         draggingRef.current = false;
         if (startTimeRef.current && endTimeRef.current) {
           let newItem = {
             ID: datasource.length + 1,
             Start: Math.min(startTimeRef.current, endTimeRef.current),
             End: Math.max(startTimeRef.current, endTimeRef.current),
-            Text: "New Event",
+            Text: "New YYY",
             Status: "N",
           };
           setDatasource([...datasource, newItem]);
@@ -141,6 +210,8 @@ export default function Slider4(props) {
       document.removeEventListener("mouseup", newTimeSpanMouseUp);
     };
   }, [datasource, newTimeSpan]);
+
+  useEffect(() => {});
 
   function canvasMouseMove(e) {
     let relativePos = e.clientX - canvasRef.current.offsetLeft;
@@ -161,6 +232,8 @@ export default function Slider4(props) {
     // Find the item that was clicked
     console.log(id);
 
+    // setSelectedItemData(e.target.dataset);
+
     if (id) {
       const parsedId = parseInt(id, 10);
       if (selectedItemId === parsedId) {
@@ -176,11 +249,11 @@ export default function Slider4(props) {
       <div>
         <div style={{ margin: "100px 0 0 100px" }}>
           00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22
-          23
+          23 24
         </div>
         <div
           style={{
-            width: "510px",
+            width: "470px",
             height: "50px",
             backgroundColor: "rgba(173, 216, 230, 0.5)",
             margin: "5px 0 0 100px",
@@ -192,6 +265,7 @@ export default function Slider4(props) {
         />
         {datasource.map((item) => (
           <div
+            ref={spanDivRef}
             key={item.ID}
             data-id={item.ID}
             style={{
@@ -216,13 +290,14 @@ export default function Slider4(props) {
           <div
             key={newTimeSpan.ID}
             data-id={newTimeSpan.ID}
+            // data-text={newTimeSpan.Text} // HOW?
             style={{
               position: "absolute",
               left: timeConvertToXpos(newTimeSpan.Start),
               top: "130px",
               width:
                 timeConvertToXpos(newTimeSpan.End) -
-                timeConvertToXpos(newTimeSpan.Start),
+                timeConvertToXpos(newTimeSpan.Start), //PLUS the left offset gap
               height: "40px",
               backgroundColor: newTimeSpan.Status === "W" ? "red" : "blue",
               border:
@@ -237,3 +312,5 @@ export default function Slider4(props) {
     </div>
   );
 }
+
+// how do i see the object for each div in the console?
