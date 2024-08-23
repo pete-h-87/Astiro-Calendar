@@ -35,6 +35,7 @@ export default function Slider4(props) {
   //states
   const [time, setTime] = useState();
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [selectedSpan, setSelectedSpan] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
   const [canvasWidth, setCanvasWidth] = useState(0);
   const [canvasMargin, setCanvasMargin] = useState(0);
@@ -137,6 +138,11 @@ export default function Slider4(props) {
   //   }
   // }, []);
 
+  function handleOnDrag(e: DragEvent): void {
+    console.log("dragging");
+    e.dataTransfer.setData("text", e.target.id);
+  }
+
   useEffect(() => {
     if (canvasRef.current) {
       setCanvasWidth(canvasRef.current.offsetWidth);
@@ -211,8 +217,6 @@ export default function Slider4(props) {
     };
   }, [datasource, newTimeSpan]);
 
-  useEffect(() => {});
-
   function canvasMouseMove(e) {
     let relativePos = e.clientX - canvasRef.current.offsetLeft;
     let totalWidth = canvasRef.current.offsetWidth;
@@ -227,10 +231,17 @@ export default function Slider4(props) {
   }
 
   function existingTimeSpanMouseDown(e) {
-    let id = e.target.dataset.id;
+    const div = e.target;
+    const id = div.dataset.id;
+    const start = div.dataset.start;
+    const end = div.dataset.end;
+    const text = div.dataset.title;
+    const status = div.dataset.status;
 
     // Find the item that was clicked
-    console.log(id);
+    console.log(
+      `ID: ${id}, Start: ${start}, End: ${end}, Text: ${text}, Status: ${status}`
+    );
 
     // setSelectedItemData(e.target.dataset);
 
@@ -268,6 +279,12 @@ export default function Slider4(props) {
             ref={spanDivRef}
             key={item.ID}
             data-id={item.ID}
+            data-title={item.Text}
+            data-end={item.End}
+            data-start={item.Start}
+            data-status={item.Status}
+            draggable="true"
+            onDragStart={(e) => handleOnDrag(e, item.ID)}
             style={{
               position: "absolute",
               left: timeConvertToXpos(item.Start),
@@ -279,7 +296,6 @@ export default function Slider4(props) {
               border: selectedItemId === item.ID ? "4px solid green" : "none",
               borderRadius: "5px",
             }}
-            title={item.Text}
             onMouseDown={existingTimeSpanMouseDown}
             //   onMouseDown={timespanMouseDown}
             //   onMouseUp={canvasMouseUp}
