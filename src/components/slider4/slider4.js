@@ -35,11 +35,12 @@ export default function Slider4(props) {
   //states
   const [time, setTime] = useState();
   const [selectedItemId, setSelectedItemId] = useState(null);
-  const [selectedSpan, setSelectedSpan] = useState(null);
+  // const [selectedSpan, setSelectedSpan] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
   const [canvasWidth, setCanvasWidth] = useState(0);
   const [canvasMargin, setCanvasMargin] = useState(0);
   const [newTimeSpan, setNewTimeSpan] = useState(null);
+  const [dragDatasource, setDragDatasource] = useState();
   //end of states
 
   //refs
@@ -64,7 +65,7 @@ export default function Slider4(props) {
     let totalWidth = xPos.target.offsetWidth;
     let positionFactor = relativePos / totalWidth;
     let hoursDecimal = 24 * positionFactor;
-    return hoursDecimal;
+    return Math.round(hoursDecimal*4)/4;
   }
 
   function pad(num, size) {
@@ -138,11 +139,6 @@ export default function Slider4(props) {
   //   }
   // }, []);
 
-  function handleOnDrag(e: DragEvent): void {
-    console.log("dragging");
-    e.dataTransfer.setData("text", e.target.id);
-  }
-
   useEffect(() => {
     if (canvasRef.current) {
       setCanvasWidth(canvasRef.current.offsetWidth);
@@ -162,7 +158,7 @@ export default function Slider4(props) {
           Start: startTimeRef.current,
           End: endTimeRef.current,
           Text: "New XXX",
-          Status: "W",
+          Status: "T",
         });
       }
     }
@@ -198,7 +194,7 @@ export default function Slider4(props) {
             Start: Math.min(startTimeRef.current, endTimeRef.current),
             End: Math.max(startTimeRef.current, endTimeRef.current),
             Text: "New YYY",
-            Status: "N",
+            Status: "T",
           };
           setDatasource([...datasource, newItem]);
           setNewTimeSpan(null);
@@ -233,17 +229,6 @@ export default function Slider4(props) {
   function existingTimeSpanMouseDown(e) {
     const div = e.target;
     const id = div.dataset.id;
-    const start = div.dataset.start;
-    const end = div.dataset.end;
-    const text = div.dataset.title;
-    const status = div.dataset.status;
-
-    // Find the item that was clicked
-    console.log(
-      `ID: ${id}, Start: ${start}, End: ${end}, Text: ${text}, Status: ${status}`
-    );
-
-    // setSelectedItemData(e.target.dataset);
 
     if (id) {
       const parsedId = parseInt(id, 10);
@@ -253,6 +238,41 @@ export default function Slider4(props) {
         setSelectedItemId(parsedId); // Select the new item
       }
     }
+  }
+
+  function handleOnDragStart(e) {
+    console.log("dragg START");
+    const dataToTransfer = JSON.stringify(e.target.dataset);
+    e.dataTransfer.setData("anObject", dataToTransfer);
+    console.log("stringy data:", dataToTransfer);
+    const clickedSpan = e.target.dataset;
+    // console.log("dataset", clickedSpan);
+    const updatedSpans = datasource.filter(object => object.ID != clickedSpan.id);
+    // console.log("dragDataSource set to:", updatedSpans);
+    setDragDatasource(updatedSpans);
+    // console.log(dragDatasource);
+  }
+
+  function handleOnDragOver(e) {
+    e.preventDefault();
+    // const clickedSpan = e.dataTransfer.getData("Object");
+    // console.log(clickedSpan)
+    // const updatedSpans = datasource.filter(object => object.ID !== clickedSpan.ID);
+
+    // setDatasource(updatedSpans);
+
+    console.log("dragging NOW");
+  }
+
+  function handleOnDrop(e) {
+    e.preventDefault();
+    console.log("dropped")
+
+    const draggedSpan = JSON.parse(e.dataTransfer.getData("anObject"));
+    console.log(draggedSpan);
+
+    setDragDatasource([...dragDatasource, draggedSpan]);
+    // console.log(dragDatasource)
   }
 
   return (
@@ -272,7 +292,11 @@ export default function Slider4(props) {
           }}
           id="canvas"
           ref={canvasRef}
-          onMouseMove={canvasMouseMove}
+          onMouseMove={canvasMouseMove} //replace with something else someWHERE else, or make the event transparent through to this div - checkout css pointer-events on MDN
+          
+          // onDragEnter={handleOnDragEnter}
+          onDragOver={handleOnDragOver}
+          onDrop={handleOnDrop}
         />
         {datasource.map((item) => (
           <div
@@ -284,7 +308,9 @@ export default function Slider4(props) {
             data-start={item.Start}
             data-status={item.Status}
             draggable="true"
-            onDragStart={(e) => handleOnDrag(e, item.ID)}
+            onDragStart={handleOnDragStart}
+            onDragOver={handleOnDragOver}
+          
             style={{
               position: "absolute",
               left: timeConvertToXpos(item.Start),
