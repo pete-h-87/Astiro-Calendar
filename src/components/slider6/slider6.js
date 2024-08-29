@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const defaultData = [
   {
@@ -88,20 +88,65 @@ export default function Slider6(props) {
     return num;
   }
 
+  // useEffect(
+  //   (e) => {
+  //     if (selectedItem && mouseMoveMode.current === "edgeMove") {
+  //       handleSpanAdjust(e);
+  //     }
+  //   },
+  //   [selectedItem]
+  // );
+
   function timespanMouseDown(e) {
     let clickedItemData = e.currentTarget.dataset["id"];
-    if (clickedItemData) {
+    if (
+      clickedItemData &&
+      cursorElementRef.current.cursor !== "cursor-col-resize"
+    ) {
       let id = Number(clickedItemData);
       let item = datasource.find((element) => element.ID === id);
       setSelectedItem(item);
       mouseMoveMode.current = "itemMove"; //add logic - is it at start? at end?
       mouseDownXPos.current = e.clientX;
-      document.body.classList.add("loading");
+      // document.body.classList.add("loading");
 
       // let element = document.getElementById(clickedItemData.ID)
       // if (element) {
       //   element.classList.add("cursor-w-resize")
       // }
+    } else if (
+      clickedItemData &&
+      cursorElementRef.current.cursor === "cursor-col-resize"
+    ) {
+      let id = Number(clickedItemData);
+      let item = datasource.find((element) => element.ID === id);
+      setSelectedItem(item);
+      mouseMoveMode.current = "edgeMove"; //add logic - is it at start? at end?
+      mouseDownXPos.current = e.clientX;
+      handleSpanAdjust(e);
+      // console.log("yoamamama")
+    }
+  }
+
+  // the click should only handle the state of the selected item
+  // to get other info on the condition of the locatio of the cursor, use
+
+  function handleSpanAdjust(e) {
+    if ((mouseMoveMode.current = "edgeMove")) {
+      let nowPosX = e.clientX;
+      let distancePoints = nowPosX - mouseDownXPos.current;
+      // if (Math.abs(distancePoints) < 10) return;
+      let timeMovedFactor = distancePoints / 510;
+      let timeMovedHours = timeMovedFactor * 24;
+      let newState = [...datasource];
+      let changedItem = newState.find((item) => item.ID === selectedItem.ID);
+      // let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+      let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
+      // changedItem.Start = newStart; //if moveEnd, moveStart...
+      changedItem.End = newEnd;
+      // mouseDownXPos.current = e.clientX;
+      setDatasource(newState);
+      console.log(newState);
     }
   }
 
@@ -125,6 +170,7 @@ export default function Slider6(props) {
   function canvasMouseUp(e) {
     mouseMoveMode.current = "";
     removeMoveCursor();
+    setSelectedItem(null);
   }
 
   function removeMoveCursor() {
@@ -143,13 +189,20 @@ export default function Slider6(props) {
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
     let changedItem = newState.find((item) => item.ID === selectedItem.ID);
-    let newStart = changedItem.Start + timeMovedHours;
-    let newEnd = changedItem.End + timeMovedHours;
-    if (distancePoints > 0) {
+    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
+    if (
+      distancePoints > 0 &&
+      cursorElementRef.current.cursor !== "cursor-col-resize"
+    ) {
       //if distancePoints>0 && moveMode === ....
       newEnd = getOverlapBorder(newEnd, true);
       newStart = changedItem.Start + (newEnd - changedItem.End);
-    } else {
+    }
+    // else if (distancePoints > 0 && cursorElementRef.current.cursor === "cursor-col-resize") {
+    //   newEnd = getOverlapBorder(newEnd, true);
+    // }
+    else {
       newStart = getOverlapBorder(newStart, false);
       newEnd = changedItem.End + (newStart - changedItem.Start);
     }
@@ -176,7 +229,6 @@ export default function Slider6(props) {
     if (selectedItem && mouseMoveMode.current !== "itemMove") {
       handleItemMove(e);
     }
-
     let cursorClass = "cursor-w-resize";
     if (
       e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 || // start of element
@@ -185,7 +237,6 @@ export default function Slider6(props) {
       // end of element
       cursorClass = "cursor-col-resize";
     }
-
     removeMoveCursor();
     cursorElementRef.current = {
       cursor: cursorClass,
