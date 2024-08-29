@@ -180,10 +180,16 @@ export default function Slider4(props) {
       } //datasource.find function to search an array to see if we are bumping into another rendered div
     }
 
+      // NOTES - TODOs
     //actual moving divs around - limit the moving and be able to move
     //change curser when clicked down to indicate to user that they can move horizontally
     //changing sizes of divs with mover marker curser
     // when hovering over the edge of a div, like an end piont, a box appears showing the time
+
+    //when you move out of the div, remove the class with it
+    //the time needs to fire even when over rendered divs
+    //combine - keep it simple and dry
+
 
     const newTimeSpanMouseUp = (e) => {
       if (draggingRef.current && canvasRef.current) {
@@ -308,9 +314,9 @@ export default function Slider4(props) {
             data-start={item.Start}
             data-status={item.Status}
             draggable="true"
-            onDragStart={handleOnDragStart}
-            onDragOver={handleOnDragOver}
-          
+            // onDragStart={handleOnDragStart}
+            // onDragOver={handleOnDragOver}
+            onMouseMove={canvasMouseMove}
             style={{
               position: "absolute",
               left: timeConvertToXpos(item.Start),

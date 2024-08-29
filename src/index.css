@@ -11,3 +11,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 } */
+
+.cursor-w-resize {
+  cursor: w-resize;
+}
+
+.cursor-col-resize {
+  cursor: col-resize;
+}

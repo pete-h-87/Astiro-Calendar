@@ -6,6 +6,8 @@ import "./global.css";
 // import Grid from "./components/react-window/Timesheet";
 import Selector from "./components/slider_three/selector";
 import Slider4 from "./components/slider4/slider4";
+import OveSelector5 from "./components/slider5/slider5";
+import Slider6 from "./components/slider6/slider6";
 
 function App(props) {
   return (
@@ -18,7 +20,7 @@ function App(props) {
         onChange={({ min, max }) => console.log(`min = ${min}, max = ${max}`)}
       /> */}
       {/* // <Slider /> */}
-      <Slider4 />
+      <Slider6 />
       {/* </Layout> */}
       {/* <Selector /> */}
     </div>
