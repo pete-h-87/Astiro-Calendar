@@ -53,8 +53,8 @@ export default function Fnc(props) {
   function xPosToHourDecimal(e) {
     let relativePos = e.clientX - e.target.offsetLeft;
     let totalWidth = e.target.offsetWidth;
-    let positionFactor = relativePos / totalWidth
-    let hoursDecimal = Math.round((24 * positionFactor) * 4) / 4;
+    let positionFactor = relativePos / totalWidth;
+    let hoursDecimal = Math.round(24 * positionFactor * 4) / 4;
     return hoursDecimal;
   }
 
@@ -122,7 +122,7 @@ export default function Fnc(props) {
 
   function canvasMouseDown(e) {
     startTimeRef.current = xPosToHourDecimal(e);
-    endTimeRef.current = e.target.dataset.End;
+    endTimeRef.current = e.target.dataset.End; //added endTimeReft to grab the End to make it "end"
     //addNewData
     let newState = [...datasource];
     let newItem = {
@@ -141,7 +141,7 @@ export default function Fnc(props) {
   function canvasMouseUp(e) {
     mouseMoveMode.current = "";
     removeMoveCursor();
-    setSelectedItem(null);
+    setSelectedItem(null); //reset selected item when upclicked 
   }
 
   function removeMoveCursor() {
@@ -160,9 +160,10 @@ export default function Fnc(props) {
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
     let changedItem = newState.find((item) => item.ID === selectedItem.ID); // now, we can find the ID because
-    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;  // the CLICK is first, the movement is second
+    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4; // the CLICK is first, the movement is second
     let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
-    if (distancePoints > 0 || distancePoints < 0) { //changed HERE to include the OR - otherwise, it only went right
+    if (distancePoints > 0 || distancePoints < 0) {
+      //changed HERE to include the OR - otherwise, it only went right
       newEnd = getOverlapBorder(newEnd, true);
       newStart = changedItem.Start + (newEnd - changedItem.End);
     } else {
