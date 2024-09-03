@@ -32,7 +32,7 @@ const defaultData = [
 ];
 
 const startTimeRef = React.createRef();
-//const endTimeRef = React.createRef()
+const endTimeRef = React.createRef();
 const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
@@ -53,8 +53,8 @@ export default function Fnc(props) {
   function xPosToHourDecimal(e) {
     let relativePos = e.clientX - e.target.offsetLeft;
     let totalWidth = e.target.offsetWidth;
-    let positionFactor = relativePos / totalWidth;
-    let hoursDecimal = 24 * positionFactor;
+    let positionFactor = relativePos / totalWidth
+    let hoursDecimal = Math.round((24 * positionFactor) * 4) / 4;
     return hoursDecimal;
   }
 
@@ -68,13 +68,13 @@ export default function Fnc(props) {
     minutes = minutes * 60;
     minutes = Math.round(minutes / 5) * 5;
     setTime(pad(hours, 2) + ":" + pad(minutes, 2));
-
     if (mouseMoveMode.current === "newItemEnd") {
       let end = xPosToHourDecimal(e);
       //let updatedItem = {...selectedItem, End:end}
       let newState = [...datasource];
       let changedItem = newState.find((item) => item.ID === selectedItem.ID);
       changedItem.End = end;
+      // endTimeRef.current = changedItem.End;
       setDatasource(newState);
     } else if (
       mouseMoveMode.current === "itemMove" ||
@@ -97,7 +97,6 @@ export default function Fnc(props) {
       let id = Number(clickedItemData);
       let item = datasource.find((element) => element.ID === id);
       setSelectedItem(item);
-
       //set info about the movement - where did the click happen?  here is where it happened:
       let moveMode = "itemMove";
       if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2) {
@@ -110,24 +109,26 @@ export default function Fnc(props) {
       mouseMoveMode.current = moveMode;
       mouseDownXPos.current = e.clientX;
       //setting done
-
       document.body.classList.add("loading");
-
       // let element = document.getElementById(clickedItemData.ID)
       // if (element) {
       //   element.classList.add("cursor-w-resize")
       // }
     }
+    // if (selectedItem) {
+    //   setSelectedItem(null)
+    // }
   }
 
   function canvasMouseDown(e) {
     startTimeRef.current = xPosToHourDecimal(e);
+    endTimeRef.current = e.target.dataset.End;
     //addNewData
     let newState = [...datasource];
     let newItem = {
       ID: datasource.length + 1,
       Start: startTimeRef.current,
-      end: startTimeRef.current,
+      end: endTimeRef.current,
       Text: "",
       Status: "",
     };
@@ -140,6 +141,7 @@ export default function Fnc(props) {
   function canvasMouseUp(e) {
     mouseMoveMode.current = "";
     removeMoveCursor();
+    setSelectedItem(null);
   }
 
   function removeMoveCursor() {
@@ -153,22 +155,20 @@ export default function Fnc(props) {
   function handleItemMoveAndResize(e) {
     let nowPosX = e.clientX;
     let distancePoints = nowPosX - mouseDownXPos.current;
-    if (Math.abs(distancePoints) < 10) return;
+    if (Math.abs(distancePoints) < 5) return; //changed here to have it increment by .25, or 15 minutes
     let timeMovedFactor = distancePoints / 510;
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
-    let changedItem = newState.find((item) => item.ID === selectedItem.ID); //now, we can find the ID because the CLICK is first, the movement is second
-    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+    let changedItem = newState.find((item) => item.ID === selectedItem.ID); // now, we can find the ID because
+    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;  // the CLICK is first, the movement is second
     let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
-
-    if (distancePoints > 0) {
+    if (distancePoints > 0 || distancePoints < 0) { //changed HERE to include the OR - otherwise, it only went right
       newEnd = getOverlapBorder(newEnd, true);
       newStart = changedItem.Start + (newEnd - changedItem.End);
     } else {
       newStart = getOverlapBorder(newStart, false);
-      newEnd = changedItem.End + Math.round(((newStart - changedItem.Start)*4) / 4);
+      newEnd = changedItem.End + (newStart - changedItem.Start);
     }
-
     if (mouseMoveMode.current !== "itemResizeEnd") {
       changedItem.Start = newStart;
     }
@@ -187,7 +187,6 @@ export default function Fnc(props) {
           return directionUp ? element.Start : element.End;
       }
     }
-
     return newTime;
   }
 
@@ -199,7 +198,6 @@ export default function Fnc(props) {
     ) {
       handleItemMoveAndResize(e);
     }
-
     let cursorClass = "cursor-w-resize";
     if (
       e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 || // start of element
@@ -208,7 +206,6 @@ export default function Fnc(props) {
       // end of element
       cursorClass = "cursor-col-resize";
     }
-
     removeMoveCursor();
     cursorElementRef.current = {
       cursor: cursorClass,
@@ -236,7 +233,6 @@ export default function Fnc(props) {
         onMouseDown={canvasMouseDown}
         onMouseUp={canvasMouseUp}
       />
-
       {datasource.map((item) => (
         <div
           //className='cursor-w-resize'
@@ -262,9 +258,7 @@ export default function Fnc(props) {
           onMouseMove={timespanMouseMove}
         ></div>
       ))}
-
       {/* <div style={{position:'absolute', left:'100px', top: '130px', width: '510px', height:'40px', backgroundColor: 'red'}} title='03:45 - 12:30 - Customer: Brødrene Jacobsen: ' ></div> */}
-
       <div>Time={time}</div>
       <div>SelectedData:{JSON.stringify(selectedItem)}</div>
     </div>
