@@ -158,15 +158,15 @@ export default function Fnc(props) {
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
     let changedItem = newState.find((item) => item.ID === selectedItem.ID); //now, we can find the ID because the CLICK is first, the movement is second
-    let newStart = changedItem.Start + timeMovedHours;
-    let newEnd = changedItem.End + timeMovedHours;
+    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
 
     if (distancePoints > 0) {
       newEnd = getOverlapBorder(newEnd, true);
       newStart = changedItem.Start + (newEnd - changedItem.End);
     } else {
       newStart = getOverlapBorder(newStart, false);
-      newEnd = changedItem.End + (newStart - changedItem.Start);
+      newEnd = changedItem.End + Math.round(((newStart - changedItem.Start)*4) / 4);
     }
 
     if (mouseMoveMode.current !== "itemResizeEnd") {
