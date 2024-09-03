@@ -141,7 +141,7 @@ export default function Fnc(props) {
   function canvasMouseUp(e) {
     mouseMoveMode.current = "";
     removeMoveCursor();
-    setSelectedItem(null); //reset selected item when upclicked 
+    setSelectedItem(null); //reset selected item when upclicked
   }
 
   function removeMoveCursor() {
@@ -167,7 +167,7 @@ export default function Fnc(props) {
       newEnd = getOverlapBorder(newEnd, true);
       newStart = changedItem.Start + (newEnd - changedItem.End);
     } else {
-      newStart = getOverlapBorder(newStart, false);
+      newStart = getOverlapBorder(newStart, false); // Here?  changes overlap rules
       newEnd = changedItem.End + (newStart - changedItem.Start);
     }
     if (mouseMoveMode.current !== "itemResizeEnd") {
