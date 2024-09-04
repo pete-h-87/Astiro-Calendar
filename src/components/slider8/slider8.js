@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const defaultData = [
   {
@@ -41,6 +41,7 @@ export default function Fnc(props) {
   const [time, setTime] = useState();
   const [selectedItem, setSelectedItem] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
+  const [configMode, setConfigMode] = useState(null);
   const [cursor, setCursor] = useState("w-resize");
 
   function decimalToXpoint(hourDecimal) {
@@ -76,6 +77,22 @@ export default function Fnc(props) {
       changedItem.End = end;
       // endTimeRef.current = changedItem.End;
       setDatasource(newState);
+    } else if (mouseMoveMode.current === "newItemStart") {
+        let start = xPosToHourDecimal(e);
+        //let updatedItem = {...selectedItem, End:end}
+        let newState = [...datasource];
+        let changedItem = newState.find((item) => item.ID === selectedItem.ID);
+        changedItem.Start = start;
+        // endTimeRef.current = changedItem.End;
+        setDatasource(newState);
+    } else if (configMode === "end") {
+        let end = xPosToHourDecimal(e);
+        //let updatedItem = {...selectedItem, End:end}
+        let newState = [...datasource];
+        let changedItem = newState.find((item) => item.ID === selectedItem.ID);
+        changedItem.End = end;
+        // endTimeRef.current = changedItem.End;
+        setDatasource(newState);
     } else if (
       mouseMoveMode.current === "itemMove" ||
       mouseMoveMode.current === "itemResizeStart" ||
@@ -83,6 +100,31 @@ export default function Fnc(props) {
     ) {
       handleItemMoveAndResize(e);
     }
+  }
+
+  function canvasMouseDown(e) {
+    startTimeRef.current = xPosToHourDecimal(e);
+    // endTimeRef.current = e.target.dataset.End; //added endTimeReft to grab the End to make it "end"
+    //addNewData
+    let newState = [...datasource];
+    let newItem = {
+      ID: datasource.length + 1,
+      Start: startTimeRef.current,
+      end: null,
+      Text: "",
+      Status: "",
+    };
+    newState.push(newItem);
+    setDatasource(newState);
+    setSelectedItem(newItem);
+    mouseMoveMode.current = "newItemStart";
+  }
+
+  function canvasMouseUp(e) {
+    mouseMoveMode.current = "";
+    removeMoveCursor();
+    setSelectedItem(null); //reset selected item when upclicked
+    setConfigMode("end");
   }
 
   function pad(num, size) {
@@ -118,30 +160,6 @@ export default function Fnc(props) {
     // if (selectedItem) {
     //   setSelectedItem(null)
     // }
-  }
-
-  function canvasMouseDown(e) {
-    startTimeRef.current = xPosToHourDecimal(e);
-    endTimeRef.current = e.target.dataset.End; //added endTimeReft to grab the End to make it "end"
-    //addNewData
-    let newState = [...datasource];
-    let newItem = {
-      ID: datasource.length + 1,
-      Start: startTimeRef.current,
-      end: endTimeRef.current,
-      Text: "",
-      Status: "",
-    };
-    newState.push(newItem);
-    setDatasource(newState);
-    setSelectedItem(newItem);
-    mouseMoveMode.current = "newItemEnd";
-  }
-
-  function canvasMouseUp(e) {
-    mouseMoveMode.current = "";
-    removeMoveCursor();
-    setSelectedItem(null); //reset selected item when upclicked
   }
 
   function removeMoveCursor() {
