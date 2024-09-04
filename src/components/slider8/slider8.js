@@ -165,12 +165,13 @@ export default function Fnc(props) {
     if (distancePoints > 0) {
       //changed HERE to include the OR - otherwise, it only went right
       newEnd = getOverlapBorder(newEnd, true);
-      newStart = getOverlapBorder(newStart, true);
-    } else {
+      newStart = changedItem.Start + (newEnd - changedItem.End);
+      console.log("possitive distance pionts", distancePoints);
+    } else if (distancePoints < 0) {
       newStart = getOverlapBorder(newStart, false); // Here?  changes overlap rules
       newEnd = changedItem.End + (newStart - changedItem.Start);
       // console.log("newStart", newStart)
-      console.log("negative distance pionts", distancePoints)
+      console.log("negative distance pionts", distancePoints);
     }
     if (mouseMoveMode.current !== "itemResizeEnd") {
       changedItem.Start = newStart;
@@ -184,12 +185,12 @@ export default function Fnc(props) {
     setDatasource(newState);
   }
 
-  function getOverlapBorder(newTime, directionRight) {
+  function getOverlapBorder(newTime, directionUp) {
     for (let index = 0; index < datasource.length; index++) {
       const element = datasource[index];
       if (element.ID != selectedItem.ID) {
         if (newTime > element.Start && newTime < element.End)
-          return directionRight ? element.Start : element.End;
+          return directionUp ? element.Start : element.End; //PROBLEM HERE
       }
     }
     return newTime;
