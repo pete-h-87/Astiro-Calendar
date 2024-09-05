@@ -36,6 +36,7 @@ const endTimeRef = React.createRef();
 const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
+const isBumpedRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
@@ -163,35 +164,50 @@ export default function Fnc(props) {
     let changedItem = newState.find((item) => item.ID === selectedItem.ID); // now, we can find the ID because
     let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4; // the CLICK is first, the movement is second
     let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
-    if (distancePoints > 0) {
-      //changed HERE to include the OR - otherwise, it only went right
-      newEnd = getOverlapBorder(newEnd, true);
-      newStart = getOverlapBorder(newStart, true);
+    if (distancePoints > 0 && mouseMoveMode.current === "itemMove") {
+      // console.log(mouseMoveMode.current)
+      newEnd = getOverlapBorder(newEnd, true, true);
+      newStart = getOverlapBorder(newStart, true, false);
     } else {
-      newStart = getOverlapBorder(newStart, false); // Here?  changes overlap rules
+      newEnd = getOverlapBorder(newEnd, false, true);
+      newStart = getOverlapBorder(newStart, false, false);
       // newEnd = changedItem.End + (newStart - changedItem.Start);
-      newEnd = getOverlapBorder(newEnd, false);
-      // console.log("newStart", newStart)
-      console.log("negative distance pionts", distancePoints);
     }
     if (mouseMoveMode.current !== "itemResizeEnd") {
       changedItem.Start = newStart;
-      // console.log("changing the START", newStart)
     }
     if (mouseMoveMode.current !== "itemResizeStart") {
       changedItem.End = newEnd;
-      // console.log("changing the end")
     }
     mouseDownXPos.current = e.clientX;
     setDatasource(newState);
   }
 
-  function getOverlapBorder(newTime, directionRight) {
+  function getOverlapBorder(newTime, directionRight, theEnd) {
+    let lastValidStartTime = selectedItem.Start;
+    let lastValidEndTime = selectedItem.End;
     for (let index = 0; index < datasource.length; index++) {
       const element = datasource[index];
       if (element.ID != selectedItem.ID) {
-        if (newTime > element.Start && newTime < element.End) {
+        if (newTime > element.Start && newTime < element.End && mouseMoveMode.current === "itemMove") {
+          isBumpedRef.current = true;
           return directionRight ? element.Start : element.End;
+        } else if (isBumpedRef.current === true && mouseMoveMode.current === "itemMove") {
+          if (directionRight) {
+            if (theEnd) {
+              console.log("NOT firing...", lastValidStartTime, lastValidEndTime)
+              isBumpedRef.current = false;
+              return element.Start;
+            } else {
+              console.log("it's firing!", lastValidStartTime, lastValidEndTime);
+              isBumpedRef.current = false;
+              return lastValidStartTime;
+            }
+          } else {
+            isBumpedRef.current = false;
+            return lastValidEndTime;
+            
+          }
         }
       }
     }
