@@ -22,7 +22,7 @@ function App(props) {
         onChange={({ min, max }) => console.log(`min = ${min}, max = ${max}`)}
       /> */}
       {/* // <Slider /> */}
-      <Slider7 />
+      <Slider8 />
       {/* </Layout> */}
       {/* <Selector /> */}
     </div>
