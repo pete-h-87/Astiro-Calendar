@@ -9,6 +9,7 @@ import Slider4 from "./components/slider4/slider4";
 import OveSelector5 from "./components/slider5/slider5";
 import Slider6 from "./components/slider6/slider6";
 import Slider7 from "./components/slider7/slider7";
+import Slider8 from "./components/slider8/slider8";
 
 function App(props) {
   return (
@@ -21,7 +22,7 @@ function App(props) {
         onChange={({ min, max }) => console.log(`min = ${min}, max = ${max}`)}
       /> */}
       {/* // <Slider /> */}
-      <Slider8 />
+      <Slider7 />
       {/* </Layout> */}
       {/* <Selector /> */}
     </div>

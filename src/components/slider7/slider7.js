@@ -39,6 +39,7 @@ const cursorElementRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
   const [cursor, setCursor] = useState("w-resize");
@@ -168,9 +169,10 @@ export default function Fnc(props) {
       newStart = getOverlapBorder(newStart, true);
     } else {
       newStart = getOverlapBorder(newStart, false); // Here?  changes overlap rules
-      newEnd = changedItem.End + (newStart - changedItem.Start);
+      // newEnd = changedItem.End + (newStart - changedItem.Start);
+      newEnd = getOverlapBorder(newEnd, false);
       // console.log("newStart", newStart)
-      console.log("negative distance pionts", distancePoints)
+      console.log("negative distance pionts", distancePoints);
     }
     if (mouseMoveMode.current !== "itemResizeEnd") {
       changedItem.Start = newStart;
@@ -188,8 +190,9 @@ export default function Fnc(props) {
     for (let index = 0; index < datasource.length; index++) {
       const element = datasource[index];
       if (element.ID != selectedItem.ID) {
-        if (newTime > element.Start && newTime < element.End)
+        if (newTime > element.Start && newTime < element.End) {
           return directionRight ? element.Start : element.End;
+        }
       }
     }
     return newTime;
