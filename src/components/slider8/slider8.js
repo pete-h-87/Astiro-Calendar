@@ -152,8 +152,8 @@ export default function Fnc(props) {
       newEnd = getOverlapBorder(newEnd, true, true);
       newStart = getOverlapBorder(newStart, true, false);
     } else if (distancePoints < 0 && mouseMoveMode.current === "itemMove") {
-      newEnd = getOverlapBorder(newEnd, false, true);
-      newStart = getOverlapBorder(newStart, false, false);
+      newEnd = getOverlapBorder(newEnd, false, false);
+      newStart = getOverlapBorder(newStart, false, true);
       // newEnd = changedItem.End + (newStart - changedItem.Start);
     }
     if (mouseMoveMode.current !== "itemResizeEnd") {
@@ -253,47 +253,50 @@ export default function Fnc(props) {
     }
   }
 
-  function getOverlapBorder(newTime, directionRight, theEnd) {
+  function getOverlapBorder(newTime, directionRight, leadingEdge) {
     let lastValidStartTime = selectedItem.Start;
     let lastValidEndTime = selectedItem.End;
+
     for (let index = 0; index < datasource.length; index++) {
       const element = datasource[index];
+
       if (element.ID !== selectedItem.ID) {
-        if (
-          newTime > element.Start &&
-          newTime < element.End &&
-          mouseMoveMode.current === "itemMove") 
-        
-            {isBumpedRef.current = true;
-              console.log()
-              return directionRight === true ? element.Start : element.End;} 
-          
-          else if (
-          isBumpedRef.current === true &&
-          mouseMoveMode.current === "itemMove") 
-          
-          {if (directionRight) 
-            {
-            console.log("RIGHT")
-            if (theEnd === true) {
-              // console.log(
-              //   "NOT firing...",
-              //   lastValidStartTime,
-              //   lastValidEndTime
-              // );
-             
-              return element.Start;
-            } else if (theEnd === false && isBumpedRef.current === true) {
-              // console.log("it's firing!", lastValidStartTime, lastValidEndTime);
-              isBumpedRef.current = false;
-              return lastValidStartTime;
+        if (directionRight === true) {
+          if (leadingEdge === true) {
+              if (newTime > element.Start &&
+                newTime < element.End &&
+                mouseMoveMode.current === "itemMove") {
+                  isBumpedRef.current = true;
+                  return element.Start;
+              } else {
+                return newTime;
+              }
+            } else if (leadingEdge === false) {
+              if (isBumpedRef === true) {
+                return lastValidStartTime;
+              } else if (isBumpedRef === false) {
+                return newTime;
+              }
             }
-          } else {
-            isBumpedRef.current = false;
-            console.log("LEFT")
-            return lastValidEndTime;
-        
-          }
+        }
+  
+        else if (directionRight === false) {
+          if (leadingEdge === true) {
+              if (newTime > element.Start &&
+                newTime < element.End &&
+                mouseMoveMode.current === "itemMove") {
+                  isBumpedRef.current = true;
+                  return element.End;
+              } else {
+                return newTime;
+              }
+            } else if (leadingEdge === false) {
+              if (isBumpedRef === true) {
+                return lastValidEndTime;
+              } else if (isBumpedRef === false) {
+                return newTime;
+              }
+            }
         }
       }
     }

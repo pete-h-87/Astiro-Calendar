@@ -159,8 +159,8 @@ export default function Fnc(props) {
       newEnd = getOverlapBorder(newEnd, true, true);
       newStart = getOverlapBorder(newStart, true, false);
     } else if (distancePoints < 0 && mouseMoveMode.current === "itemMove") {
-      newEnd = getOverlapBorder(newEnd, false, true);
-      newStart = getOverlapBorder(newStart, false, false);
+      newEnd = getOverlapBorder(newEnd, false, false);
+      newStart = getOverlapBorder(newStart, false, true);
       // newEnd = changedItem.End + (newStart - changedItem.Start);
     }
     if (mouseMoveMode.current !== "itemResizeEnd") {
