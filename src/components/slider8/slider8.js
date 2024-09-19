@@ -195,6 +195,7 @@ export default function Fnc(props) {
     // HW - attach mouse events to document, and dismount
     // HW - attach clicking off on document to deselect the div previously selected
     // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
+    // when selected, click a for arbeid, r for reise, colors based on that
   }
 
   function canvasMouseDown(e) {
