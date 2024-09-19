@@ -4,7 +4,7 @@ const defaultData = [
   {
     ID: 1,
     Start: 4.0,
-    End: 9.5,
+    End: 9.0,
     Text: "Bandak: Service on machine",
     Status: "T",
   },
@@ -24,7 +24,7 @@ const defaultData = [
   },
   {
     ID: 4,
-    Start: 15.0,
+    Start: 15.5,
     End: 19.0,
     Text: "Bandak: Adjustment of gantry",
     Status: "T",
@@ -256,44 +256,45 @@ export default function Fnc(props) {
   function getOverlapBorder(newTime, directionRight, leadingEdge) {
     let lastValidStartTime = selectedItem.Start;
     let lastValidEndTime = selectedItem.End;
-
     for (let index = 0; index < datasource.length; index++) {
       const element = datasource[index];
-
+      console.log(element)
       if (element.ID !== selectedItem.ID) {
         if (directionRight === true) {
           if (leadingEdge === true) {
               if (newTime > element.Start &&
                 newTime < element.End &&
                 mouseMoveMode.current === "itemMove") {
-                  isBumpedRef.current = true;
                   return element.Start;
               } else {
                 return newTime;
               }
             } else if (leadingEdge === false) {
-              if (isBumpedRef === true) {
+              if (selectedItem.End >= element.Start &&
+                selectedItem.End <= element.End &&
+                mouseMoveMode.current === "itemMove") {
                 return lastValidStartTime;
-              } else if (isBumpedRef === false) {
+              } else {
                 return newTime;
               }
             }
         }
-  
         else if (directionRight === false) {
           if (leadingEdge === true) {
-              if (newTime > element.Start &&
+              if (
                 newTime < element.End &&
+                newTime > element.Start &&
                 mouseMoveMode.current === "itemMove") {
-                  isBumpedRef.current = true;
                   return element.End;
               } else {
                 return newTime;
               }
             } else if (leadingEdge === false) {
-              if (isBumpedRef === true) {
+              if (selectedItem.Start >= element.Start &&
+                selectedItem.Start <= element.End &&
+                mouseMoveMode.current === "itemMove") {
                 return lastValidEndTime;
-              } else if (isBumpedRef === false) {
+              } else {
                 return newTime;
               }
             }

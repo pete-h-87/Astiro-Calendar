@@ -2,9 +2,6 @@ export function Test() {
   return <h1>This is a test.</h1>;
 }
 
-
-
-
 import React, { useState, useEffect } from "react";
 
 const defaultData = [
@@ -265,41 +262,30 @@ export default function Fnc(props) {
     let lastValidEndTime = selectedItem.End;
     for (let index = 0; index < datasource.length; index++) {
       const element = datasource[index];
+      console.log(element);
       if (element.ID !== selectedItem.ID) {
         if (
           newTime > element.Start &&
           newTime < element.End &&
-          mouseMoveMode.current === "itemMove") 
-        
-            {isBumpedRef.current = true;
-              console.log()
-              return directionRight ? element.Start : element.End;} 
-          
-          else if (
+          mouseMoveMode.current === "itemMove"
+        ) {
+          isBumpedRef.current = true;
+          return directionRight ? element.Start : element.End;
+        } else if (
           isBumpedRef.current === true &&
-          mouseMoveMode.current === "itemMove") 
-          
-          {if (directionRight) 
-            {
-            console.log("RIGHT")
+          mouseMoveMode.current === "itemMove"
+        ) {
+          if (directionRight) {
             if (theEnd) {
-              // console.log(
-              //   "NOT firing...",
-              //   lastValidStartTime,
-              //   lastValidEndTime
-              // );
               isBumpedRef.current = false;
               return element.Start;
             } else {
-              // console.log("it's firing!", lastValidStartTime, lastValidEndTime);
               isBumpedRef.current = false;
               return lastValidStartTime;
             }
           } else {
             isBumpedRef.current = false;
-            console.log("LEFT")
             return lastValidEndTime;
-        
           }
         }
       }
