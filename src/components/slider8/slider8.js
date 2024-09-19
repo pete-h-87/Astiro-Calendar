@@ -107,27 +107,49 @@ export default function Fnc(props) {
 
     let cursorClass;
 
+    let hasNeighbor = false;
+
     for (let index = 0; index < datasource.length; index++) {
-      const element = datasource[index];
-      const targetEnd = Number(e.target.dataset.end);
-      if (element.ID !== e.target.dataset.id) {
-        if (
-          (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ||
-            e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) &&
-          element.Start === targetEnd
-        ) {
-          console.log("WORKING!");
-          cursorClass = "cursor-col-resize";
-        } else if (
-          (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ||
-            e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) &&
-          element.Start !== targetEnd
-        ) {
-          console.log("not working");
-          cursorClass = "cursor-w-resize";
-        }
+      const anElement = datasource[index];
+      const target = e.target.dataset;
+      if (
+        Number(target.end) === anElement.Start ||
+        Number(target.start === anElement.End)
+      ) {
+        hasNeighbor = true;
+        console.log("has neighbor");
+        break;
       }
     }
+
+    if (
+      e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ||
+      e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8
+    ) {
+      cursorClass = hasNeighbor ? "cursor-col-resize" : "cursor-w-resize";
+    }
+
+    // for (let index = 0; index < datasource.length; index++) {
+    //   const anElement = datasource[index];
+    //   const targetEnd = Number(e.target.dataset.end);
+    //   if (anElement.ID !== e.target.dataset.id) {
+    //     if (
+    //       (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ||
+    //         e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) &&
+    //       targetEnd !== anElement.Start
+    //     ) {
+    //       console.log("no neighbor");
+    //       cursorClass = "cursor-w-resize";
+    //     } else if (
+    //       (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ||
+    //         e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) &&
+    //       targetEnd === anElement.Start
+    //     ) {
+    //       console.log("BUMPING");
+    //       cursorClass = "cursor-col-resize";
+    //     }
+    //   }
+    // }
 
     removeMoveCursor();
     cursorElementRef.current = {
@@ -167,9 +189,12 @@ export default function Fnc(props) {
 
   function timespanMouseUp(e) {
     e.preventDefault();
-    setSelectedItem(null);
+    // setSelectedItem(null);
     mouseMoveMode.current = "";
-    document.body.classList.remove("loading");
+    document.body.classList.remove("loading"); // HW -  keep item selected, but have the functionality stop
+    // HW - attach mouse events to document, and dismount
+    // HW - attach clicking off on document to deselect the div previously selected
+    // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
   }
 
   function canvasMouseDown(e) {
@@ -236,7 +261,6 @@ export default function Fnc(props) {
     let lastValidStartTime = selectedItem.Start;
     let lastValidEndTime = selectedItem.End;
     let result = newTime;
-
     for (let index = 0; index < datasource.length; index++) {
       const element = datasource[index];
       if (element.ID !== selectedItem.ID) {
