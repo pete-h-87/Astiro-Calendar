@@ -36,6 +36,7 @@ const endTimeRef = React.createRef();
 const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
+const isClickedRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
@@ -67,6 +68,9 @@ export default function Fnc(props) {
 
   function timespanMouseDown(e) {
     e.preventDefault();
+
+
+
     let clickedItemData = e.currentTarget.dataset["id"];
     if (clickedItemData) {
       let id = Number(clickedItemData);
@@ -106,28 +110,59 @@ export default function Fnc(props) {
     }
 
     let cursorClass;
-
     let hasNeighbor = false;
-
     for (let index = 0; index < datasource.length; index++) {
       const anElement = datasource[index];
       const target = e.target.dataset;
+      // console.log(e.target.dataset)
       if (
         Number(target.end) === anElement.Start ||
-        Number(target.start === anElement.End)
+        Number(target.start) === anElement.End
       ) {
+        // console.log(anElement)
         hasNeighbor = true;
-        console.log("has neighbor");
+        
         break;
       }
     }
-
-    if (
-      e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ||
-      e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8
-    ) {
-      cursorClass = hasNeighbor ? "cursor-col-resize" : "cursor-w-resize";
+    
+    for (let index = 0; index < datasource.length; index++) {
+      const anElement = datasource[index];
+      const target = e.target.dataset;
+    if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+      if (Number(target.end) === anElement.Start) {
+        if (hasNeighbor) {
+          cursorClass = "cursor-col-resize"
+          console.log("has neighbor to the RIGHT");
+          // console.log(anElement)
+          hasNeighbor = false;
+          break;
+        } else {
+          cursorClass = "cursor-w-resize"
+          console.log("has NO buddy to the RIGHT");
+        }
+      } else {
+        console.log("x")
+        cursorClass = "cursor-w-resize"
+      };
     }
+    else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ) {
+      if (Number(target.start) === anElement.End) {
+        if (hasNeighbor) {
+          cursorClass = "cursor-col-resize"
+          console.log("has neighbor to the LEFT");
+          hasNeighbor = false;
+          break;
+        } else {
+          cursorClass = "cursor-w-resize"
+          console.log("has NO buddy to the LEFT");
+        }
+      } else {
+        console.log("y")
+        cursorClass = "cursor-w-resize"
+        };
+    }
+  }
 
     // for (let index = 0; index < datasource.length; index++) {
     //   const anElement = datasource[index];
@@ -188,8 +223,17 @@ export default function Fnc(props) {
   }
 
   function timespanMouseUp(e) {
+    if (isClickedRef.current === true) {
+      isClickedRef.current = false;
+      setSelectedItem(null);
+    }
+    if (selectedItem) {
+      isClickedRef.current = true;
+    } else {
+      isClickedRef.current = false;
+    }
+
     e.preventDefault();
-    // setSelectedItem(null);
     mouseMoveMode.current = "";
     document.body.classList.remove("loading"); // HW -  keep item selected, but have the functionality stop
     // HW - attach mouse events to document, and dismount
