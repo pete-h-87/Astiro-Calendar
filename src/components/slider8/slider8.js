@@ -40,10 +40,9 @@ const isClickedRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
-
   const [selectedItem, setSelectedItem] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
-  const [cursor, setCursor] = useState("w-resize");
+  // const [cursor, setCursor] = useState("w-resize");
 
   function decimalToXpoint(hourDecimal) {
     let posFactor = hourDecimal / 24;
@@ -68,22 +67,57 @@ export default function Fnc(props) {
 
   function timespanMouseDown(e) {
     e.preventDefault();
-
-
-
     let clickedItemData = e.currentTarget.dataset["id"];
     if (clickedItemData) {
       let id = Number(clickedItemData);
       let item = datasource.find((element) => element.ID === id);
       setSelectedItem(item);
       let moveMode = "itemMove";
-      if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2) {
-        moveMode = "itemResizeStart";
-      } else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-        moveMode = "itemResizeEnd";
-      } else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-        moveMode = "itemResizeSplit";
+      let hasNeighbor = false;
+      for (let index = 0; index < datasource.length; index++) {
+        const anElement = datasource[index];
+        const target = e.target.dataset;
+        // console.log(e.target.dataset)
+        if (
+          Number(target.end) === anElement.Start ||
+          Number(target.start) === anElement.End
+        ) {
+          // console.log(anElement)
+          hasNeighbor = true;
+          break;
+        }
       }
+      for (let index = 0; index < datasource.length; index++) {
+        const anElement = datasource[index];
+        const target = e.target.dataset;
+        if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+          if (Number(target.end) === anElement.Start) {
+            if (hasNeighbor) {
+              moveMode = "itemResizeSplit";
+              break;
+            } else {
+              moveMode = "itemResizeEnd";
+            }
+          } else {
+            moveMode = "itemResizeEnd";
+          }
+        } else if (
+          e.clientX <
+          e.target.offsetLeft + e.target.offsetWidth * 0.2
+        ) {
+          if (Number(target.start) === anElement.End) {
+            if (hasNeighbor) {
+              moveMode = "itemResizeSplit";
+              break;
+            } else {
+              moveMode = "itemResizeStart";
+            }
+          } else {
+            moveMode = "itemResizeStart";
+          }
+        }
+      }
+      console.log(moveMode);
       mouseMoveMode.current = moveMode;
       mouseDownXPos.current = e.clientX;
       //setting done
@@ -103,12 +137,12 @@ export default function Fnc(props) {
     if (
       (selectedItem && mouseMoveMode.current === "itemMove") ||
       mouseMoveMode.current === "itemResizeStart" ||
-      mouseMoveMode.current === "itemResizeEnd" ||
-      mouseMoveMode.current === "itemResizeSplit"
+      mouseMoveMode.current === "itemResizeEnd"
     ) {
       handleItemMoveAndResize(e);
+    } else if (mouseMoveMode.current === "itemResizeSplit") {
+      handleSplitResize(e);
     }
-
     let cursorClass;
     let hasNeighbor = false;
     for (let index = 0; index < datasource.length; index++) {
@@ -121,71 +155,36 @@ export default function Fnc(props) {
       ) {
         // console.log(anElement)
         hasNeighbor = true;
-        
         break;
       }
     }
-    
     for (let index = 0; index < datasource.length; index++) {
       const anElement = datasource[index];
       const target = e.target.dataset;
-    if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-      if (Number(target.end) === anElement.Start) {
-        if (hasNeighbor) {
-          cursorClass = "cursor-col-resize"
-          console.log("has neighbor to the RIGHT");
-          // console.log(anElement)
-          hasNeighbor = false;
-          break;
+      if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+        if (Number(target.end) === anElement.Start) {
+          if (hasNeighbor) {
+            cursorClass = "cursor-col-resize";
+            break;
+          } else {
+            cursorClass = "cursor-w-resize";
+          }
         } else {
-          cursorClass = "cursor-w-resize"
-          console.log("has NO buddy to the RIGHT");
+          cursorClass = "cursor-w-resize";
         }
-      } else {
-        console.log("x")
-        cursorClass = "cursor-w-resize"
-      };
-    }
-    else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ) {
-      if (Number(target.start) === anElement.End) {
-        if (hasNeighbor) {
-          cursorClass = "cursor-col-resize"
-          console.log("has neighbor to the LEFT");
-          hasNeighbor = false;
-          break;
+      } else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2) {
+        if (Number(target.start) === anElement.End) {
+          if (hasNeighbor) {
+            cursorClass = "cursor-col-resize";
+            break;
+          } else {
+            cursorClass = "cursor-w-resize";
+          }
         } else {
-          cursorClass = "cursor-w-resize"
-          console.log("has NO buddy to the LEFT");
+          cursorClass = "cursor-w-resize";
         }
-      } else {
-        console.log("y")
-        cursorClass = "cursor-w-resize"
-        };
+      }
     }
-  }
-
-    // for (let index = 0; index < datasource.length; index++) {
-    //   const anElement = datasource[index];
-    //   const targetEnd = Number(e.target.dataset.end);
-    //   if (anElement.ID !== e.target.dataset.id) {
-    //     if (
-    //       (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ||
-    //         e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) &&
-    //       targetEnd !== anElement.Start
-    //     ) {
-    //       console.log("no neighbor");
-    //       cursorClass = "cursor-w-resize";
-    //     } else if (
-    //       (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 ||
-    //         e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) &&
-    //       targetEnd === anElement.Start
-    //     ) {
-    //       console.log("BUMPING");
-    //       cursorClass = "cursor-col-resize";
-    //     }
-    //   }
-    // }
-
     removeMoveCursor();
     cursorElementRef.current = {
       cursor: cursorClass,
@@ -208,15 +207,64 @@ export default function Fnc(props) {
     if (distancePoints > 0 && mouseMoveMode.current === "itemMove") {
       newEnd = getOverlapBorder(newEnd, true, true);
       newStart = getOverlapBorder(newStart, true, false);
+      // console.log(newStart)
     } else if (distancePoints < 0 && mouseMoveMode.current === "itemMove") {
       newEnd = getOverlapBorder(newEnd, false, false);
       newStart = getOverlapBorder(newStart, false, true);
     }
-    if (mouseMoveMode.current !== "itemResizeEnd") {
+    if (
+      mouseMoveMode.current === "itemResizeStart" ||
+      mouseMoveMode.current === "itemMove"
+    ) {
       changedItem.Start = newStart;
     }
-    if (mouseMoveMode.current !== "itemResizeStart") {
+    if (
+      mouseMoveMode.current === "itemResizeEnd" ||
+      mouseMoveMode.current === "itemMove"
+    ) {
       changedItem.End = newEnd;
+    }
+    if (distancePoints < 0 && mouseMoveMode.current === "itemResizeStart") {
+      newStart = getOverlapBorder(newStart, false, true);
+      changedItem.Start = newStart;
+    }
+    if (distancePoints > 0 && mouseMoveMode.current === "itemResizeEnd") {
+      newEnd = getOverlapBorder(newEnd, true, true);
+      changedItem.End = newEnd;
+    }
+    mouseDownXPos.current = e.clientX;
+    setDatasource(newState);
+  }
+
+  function handleSplitResize(e) {
+    console.log("handling the split");
+    e.preventDefault();
+    let nowPosX = e.clientX;
+    let distancePoints = nowPosX - mouseDownXPos.current;
+    if (Math.abs(distancePoints) < 5) return;
+    let timeMovedFactor = distancePoints / 510;
+    let timeMovedHours = timeMovedFactor * 24;
+    let newState = [...datasource];
+    let changedItem = newState.find((item) => item.ID === selectedItem.ID);
+    let changedItemNeighbor = newState.find(
+      (item) =>
+        item.End === selectedItem.Start || item.Start === selectedItem.End
+    );
+    console.log("changedItemNeighbor:", changedItemNeighbor);
+    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
+    let newNeighborStart =
+      changedItemNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+    let newNeighborEnd =
+      changedItemNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+    if (distancePoints !== 0 && mouseMoveMode.current === "itemResizeSplit") {
+      if (changedItem.Start < changedItemNeighbor.Start) {
+        changedItem.End = newEnd;
+        changedItemNeighbor.Start = newNeighborStart;
+      } else {
+        changedItem.Start = newStart;
+        changedItemNeighbor.End = newNeighborEnd;
+      }
     }
     mouseDownXPos.current = e.clientX;
     setDatasource(newState);
@@ -232,7 +280,6 @@ export default function Fnc(props) {
     } else {
       isClickedRef.current = false;
     }
-
     e.preventDefault();
     mouseMoveMode.current = "";
     document.body.classList.remove("loading"); // HW -  keep item selected, but have the functionality stop
@@ -313,16 +360,16 @@ export default function Fnc(props) {
           if (leadingEdge === true) {
             if (
               newTime > element.Start &&
-              newTime < element.End &&
-              mouseMoveMode.current === "itemMove"
+              newTime < element.End
+              // mouseMoveMode.current === "itemMove"
             ) {
               result = element.Start; // Update result instead of returning
             }
           } else if (leadingEdge === false) {
             if (
               selectedItem.End >= element.Start &&
-              selectedItem.End <= element.End &&
-              mouseMoveMode.current === "itemMove"
+              selectedItem.End <= element.End
+              // mouseMoveMode.current === "itemMove"
             ) {
               result = lastValidStartTime;
             }
@@ -331,16 +378,16 @@ export default function Fnc(props) {
           if (leadingEdge === true) {
             if (
               newTime < element.End &&
-              newTime > element.Start &&
-              mouseMoveMode.current === "itemMove"
+              newTime > element.Start
+              // && mouseMoveMode.current === "itemMove"
             ) {
               result = element.End;
             }
           } else if (leadingEdge === false) {
             if (
               selectedItem.Start >= element.Start &&
-              selectedItem.Start <= element.End &&
-              mouseMoveMode.current === "itemMove"
+              selectedItem.Start <= element.End
+              // && mouseMoveMode.current === "itemMove"
             ) {
               result = lastValidEndTime;
             }

@@ -1,16 +1,9 @@
-export function Test() {
-  return <h1>This is a test.</h1>;
-}
-
-
-
-
 import React, { useState, useEffect } from "react";
 
 const defaultData = [
   {
     ID: 1,
-    Start: 8.0,
+    Start: 6.0,
     End: 9.5,
     Text: "Bandak: Service on machine",
     Status: "T",
@@ -43,14 +36,13 @@ const endTimeRef = React.createRef();
 const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
-const isBumpedRef = React.createRef();
+const isClickedRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
-
   const [selectedItem, setSelectedItem] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
-  const [cursor, setCursor] = useState("w-resize");
+  // const [cursor, setCursor] = useState("w-resize");
 
   function decimalToXpoint(hourDecimal) {
     let posFactor = hourDecimal / 24;
@@ -76,32 +68,57 @@ export default function Fnc(props) {
   function timespanMouseDown(e) {
     e.preventDefault();
     let clickedItemData = e.currentTarget.dataset["id"];
-    console.log(clickedItemData);
-    // console.log(selectedItem);
-
-    // console.log("current target:", clickedItemData);
     if (clickedItemData) {
       let id = Number(clickedItemData);
       let item = datasource.find((element) => element.ID === id);
       setSelectedItem(item);
-      // console.log("selected item:", item);
-      //set info about the movement - where did the click happen?  here is where it happened:
       let moveMode = "itemMove";
-      if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2) {
-        moveMode = "itemResizeStart";
-        // console.log("mouse is over the left edge:", moveMode)
-      } // start of element
-      else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-        // end of element
-        moveMode = "itemResizeEnd";
-        // console.log("mouse is over the right edge:", moveMode)
+      let hasNeighbor = false;
+      for (let index = 0; index < datasource.length; index++) {
+        const anElement = datasource[index];
+        const target = e.target.dataset;
+        // console.log(e.target.dataset)
+        if (
+          Number(target.end) === anElement.Start ||
+          Number(target.start) === anElement.End
+        ) {
+          // console.log(anElement)
+          hasNeighbor = true;
+          break;
+        }
       }
+      for (let index = 0; index < datasource.length; index++) {
+        const anElement = datasource[index];
+        const target = e.target.dataset;
+        if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+          if (Number(target.end) === anElement.Start) {
+            if (hasNeighbor) {
+              moveMode = "itemResizeSplit";
+              break;
+            } else {
+              moveMode = "itemResizeEnd";
+            }
+          } else {
+            moveMode = "itemResizeEnd";
+          }
+        } else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2) {
+          if (Number(target.start) === anElement.End) {
+            if (hasNeighbor) {
+              moveMode = "itemResizeSplit";
+              break;
+            } else {
+              moveMode = "itemResizeStart";
+            }
+          } else {
+            moveMode = "itemResizeStart";
+          }
+        }
+      }
+      console.log(moveMode)
       mouseMoveMode.current = moveMode;
       mouseDownXPos.current = e.clientX;
-      // console.log("xposDOWN:", mouseDownXPos.current);
       //setting done
       document.body.classList.add("loading");
-
       // let element = document.getElementById(clickedItemData.ID)
       // if (element) {
       //   element.classList.add("cursor-w-resize")
@@ -120,16 +137,50 @@ export default function Fnc(props) {
       mouseMoveMode.current === "itemResizeEnd"
     ) {
       handleItemMoveAndResize(e);
-      // console.log("selected item:", selectedItem);
-      // console.log("mouseDown X pos:", mouseDownXPos.current)
+    } else if (mouseMoveMode.current === "itemResizeSplit") {
+      handleSplitResize(e)
     }
-    let cursorClass = "cursor-w-resize";
-    if (
-      e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 || // start of element
-      e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8
-    ) {
-      // end of element
-      cursorClass = "cursor-col-resize";
+    let cursorClass;
+    let hasNeighbor = false;
+    for (let index = 0; index < datasource.length; index++) {
+      const anElement = datasource[index];
+      const target = e.target.dataset;
+      // console.log(e.target.dataset)
+      if (
+        Number(target.end) === anElement.Start ||
+        Number(target.start) === anElement.End
+      ) {
+        // console.log(anElement)
+        hasNeighbor = true;
+        break;
+      }
+    }
+    for (let index = 0; index < datasource.length; index++) {
+      const anElement = datasource[index];
+      const target = e.target.dataset;
+      if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+        if (Number(target.end) === anElement.Start) {
+          if (hasNeighbor) {
+            cursorClass = "cursor-col-resize";
+            break;
+          } else {
+            cursorClass = "cursor-w-resize";
+          }
+        } else {
+          cursorClass = "cursor-w-resize";
+        }
+      } else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2) {
+        if (Number(target.start) === anElement.End) {
+          if (hasNeighbor) {
+            cursorClass = "cursor-col-resize";
+            break;
+          } else {
+            cursorClass = "cursor-w-resize";
+          }
+        } else {
+          cursorClass = "cursor-w-resize";
+        }
+      }
     }
     removeMoveCursor();
     cursorElementRef.current = {
@@ -143,11 +194,7 @@ export default function Fnc(props) {
     e.preventDefault();
     let nowPosX = e.clientX;
     let distancePoints = nowPosX - mouseDownXPos.current;
-    // console.log("selectedItem:", selectedItem)
-    // console.log(mouseDownXPos.current);
-    // console.log(mouseMoveMode.current)
     if (Math.abs(distancePoints) < 5) return; //changed here to have it increment by .25, or 15 minutes
-    // console.log("AFTER:", distancePoints)
     let timeMovedFactor = distancePoints / 510;
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
@@ -155,13 +202,11 @@ export default function Fnc(props) {
     let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4; // the CLICK is first, the movement is second
     let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
     if (distancePoints > 0 && mouseMoveMode.current === "itemMove") {
-      // console.log(mouseMoveMode.current)
       newEnd = getOverlapBorder(newEnd, true, true);
       newStart = getOverlapBorder(newStart, true, false);
     } else if (distancePoints < 0 && mouseMoveMode.current === "itemMove") {
       newEnd = getOverlapBorder(newEnd, false, false);
       newStart = getOverlapBorder(newStart, false, true);
-      // newEnd = changedItem.End + (newStart - changedItem.Start);
     }
     if (mouseMoveMode.current !== "itemResizeEnd") {
       changedItem.Start = newStart;
@@ -169,40 +214,66 @@ export default function Fnc(props) {
     if (mouseMoveMode.current !== "itemResizeStart") {
       changedItem.End = newEnd;
     }
+    if (distancePoints < 0 && mouseMoveMode.current === "itemResizeStart") {
+      newStart = getOverlapBorder(newStart, false, false)
+    }
     mouseDownXPos.current = e.clientX;
     setDatasource(newState);
-    // mouseMoveMode.current = ''; HERE - makes going left like going right
-    // console.log("after abs:", mouseMoveMode.current)
   }
 
-  // useEffect(() => {
-  //   // Attach the mouseup event listener to the window object
-  //   window.addEventListener("mouseup", timespanMouseUp);
+  function handleSplitResize(e) {
+    console.log("handling the split")
 
-  //   // Cleanup function to remove the event listener
-  //   return () => {
-  //     window.removeEventListener("mouseup", timespanMouseUp);
-  //   };
-  // }, []);
+    e.preventDefault();
+    let nowPosX = e.clientX;
+    let distancePoints = nowPosX - mouseDownXPos.current;
+    if (Math.abs(distancePoints) < 5) return;
+    let timeMovedFactor = distancePoints / 510;
+    let timeMovedHours = timeMovedFactor * 24;
+    let newState = [...datasource];
+    let changedItem = newState.find((item) => item.ID === selectedItem.ID);
+    let changedItemNeighbor = newState.find((item) => item.End === selectedItem.Start || item.Start === selectedItem.End);
+    console.log("changedItemNeighbor:", changedItemNeighbor);
+    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
+    let newNeighborStart = changedItemNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+    let newNeighborEnd = changedItemNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+    if (distancePoints !== 0 && mouseMoveMode.current === "itemResizeSplit") {
+      if (changedItem.Start < changedItemNeighbor.Start) {
+        changedItem.End = newEnd;
+        changedItemNeighbor.Start = newNeighborStart;
+      } else {
+        changedItem.Start = newStart;
+        changedItemNeighbor.End = newNeighborEnd;
+      }
+    }
+    mouseDownXPos.current = e.clientX;
+    setDatasource(newState);
+  }
 
   function timespanMouseUp(e) {
+    if (isClickedRef.current === true) {
+      isClickedRef.current = false;
+      setSelectedItem(null);
+    }
+    if (selectedItem) {
+      isClickedRef.current = true;
+    } else {
+      isClickedRef.current = false;
+    }
     e.preventDefault();
-    setSelectedItem(null);
     mouseMoveMode.current = "";
-    document.body.classList.remove("loading");
-    //reset selected item when upclicked
-    // isBumpedRef.current = false;
-    // console.log("mouseMoveMode:", mouseMoveMode.current);
-    // console.log("mouseUp", mouseDownXPos.current);
-    // console.log("cursorElement", cursorElementRef.current);
-    // console.log("isBumped", isBumpedRef.current);
-    // console.log(selectedItem);
+    document.body.classList.remove("loading"); // HW -  keep item selected, but have the functionality stop
+    // HW - attach mouse events to document, and dismount
+    // HW - attach clicking off on document to deselect the div previously selected
+    // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
+    // when selected, click a for arbeid, r for reise, colors based on that
   }
 
   function canvasMouseDown(e) {
     startTimeRef.current = xPosToHourDecimal(e);
-    endTimeRef.current = e.target.dataset.End; //added endTimeReft to grab the End to make it "end"
-    //addNewData
+    endTimeRef.current = e.target.dataset.End;
+    console.log(e.target.dataset.End);
     let newState = [...datasource];
     let newItem = {
       ID: datasource.length + 1,
@@ -256,47 +327,56 @@ export default function Fnc(props) {
       cursorElementRef.current.element.classList.remove(
         cursorElementRef.current.cursor
       );
-      // console.log("removeMoveCursor funciton has fired")
     }
   }
 
-  function getOverlapBorder(newTime, directionRight, theEnd) {
+  function getOverlapBorder(newTime, directionRight, leadingEdge) {
     let lastValidStartTime = selectedItem.Start;
     let lastValidEndTime = selectedItem.End;
+    let result = newTime;
     for (let index = 0; index < datasource.length; index++) {
       const element = datasource[index];
-      console.log(element)
       if (element.ID !== selectedItem.ID) {
-        if (
-          newTime > element.Start &&
-          newTime < element.End &&
-          mouseMoveMode.current === "itemMove") 
-        
-            {isBumpedRef.current = true;
-              return directionRight ? element.Start : element.End;} 
-          
-          else if (
-          isBumpedRef.current === true &&
-          mouseMoveMode.current === "itemMove") 
-          
-          {if (directionRight) 
-            {
-            if (theEnd) {
-              isBumpedRef.current = false;
-              return element.Start;
-            } else {
-              isBumpedRef.current = false;
-              return lastValidStartTime;
+        if (directionRight === true) {
+          if (leadingEdge === true) {
+            if (
+              newTime > element.Start &&
+              newTime < element.End &&
+              mouseMoveMode.current === "itemMove"
+            ) {
+              result = element.Start; // Update result instead of returning
             }
-          } else {
-            isBumpedRef.current = false;
-            return lastValidEndTime;
-        
+          } else if (leadingEdge === false) {
+            if (
+              selectedItem.End >= element.Start &&
+              selectedItem.End <= element.End &&
+              mouseMoveMode.current === "itemMove"
+            ) {
+              result = lastValidStartTime;
+            }
+          }
+        } else if (directionRight === false) {
+          if (leadingEdge === true) {
+            if (
+              newTime < element.End &&
+              newTime > element.Start 
+              // && mouseMoveMode.current === "itemMove"
+            ) {
+              result = element.End;
+            }
+          } else if (leadingEdge === false) {
+            if (
+              selectedItem.Start >= element.Start &&
+              selectedItem.Start <= element.End 
+              // && mouseMoveMode.current === "itemMove"
+            ) {
+              result = lastValidEndTime;
+            }
           }
         }
       }
     }
-    return newTime;
+    return result; // Return the result after the loop
   }
 
   return (
@@ -323,6 +403,8 @@ export default function Fnc(props) {
           //className='cursor-w-resize'
           key={item.ID}
           data-id={item.ID}
+          data-start={item.Start}
+          data-end={item.End}
           style={{
             position: "absolute",
             left: decimalToXpoint(item.Start),
