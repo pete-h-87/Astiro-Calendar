@@ -65,6 +65,26 @@ export default function Fnc(props) {
     return num;
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "w" && selectedItem) {
+        const newState = datasource.map((item) =>
+          item.ID === selectedItem.ID ? { ...item, Status: "W" } : item
+        );
+        setDatasource(newState);
+      } else if (e.key === "t" && selectedItem) {
+        const newState = datasource.map((item) =>
+          item.ID === selectedItem.ID ? { ...item, Status: "T" } : item
+        );
+        setDatasource(newState);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedItem, datasource]);
+
   function timespanMouseDown(e) {
     e.preventDefault();
     let clickedItemData = e.currentTarget.dataset["id"];
@@ -87,6 +107,7 @@ export default function Fnc(props) {
           break;
         }
       }
+
       for (let index = 0; index < datasource.length; index++) {
         const anElement = datasource[index];
         const target = e.target.dataset;
@@ -148,12 +169,10 @@ export default function Fnc(props) {
     for (let index = 0; index < datasource.length; index++) {
       const anElement = datasource[index];
       const target = e.target.dataset;
-      // console.log(e.target.dataset)
       if (
         Number(target.end) === anElement.Start ||
         Number(target.start) === anElement.End
       ) {
-        // console.log(anElement)
         hasNeighbor = true;
         break;
       }
@@ -237,7 +256,6 @@ export default function Fnc(props) {
   }
 
   function handleSplitResize(e) {
-    console.log("handling the split");
     e.preventDefault();
     let nowPosX = e.clientX;
     let distancePoints = nowPosX - mouseDownXPos.current;
@@ -250,7 +268,6 @@ export default function Fnc(props) {
       (item) =>
         item.End === selectedItem.Start || item.Start === selectedItem.End
     );
-    console.log("changedItemNeighbor:", changedItemNeighbor);
     let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
     let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
     let newNeighborStart =
@@ -271,22 +288,28 @@ export default function Fnc(props) {
   }
 
   function timespanMouseUp(e) {
-    if (isClickedRef.current === true) {
-      isClickedRef.current = false;
-      setSelectedItem(null);
-    }
-    if (selectedItem) {
-      isClickedRef.current = true;
-    } else {
-      isClickedRef.current = false;
-    }
     e.preventDefault();
     mouseMoveMode.current = "";
-    document.body.classList.remove("loading"); // HW -  keep item selected, but have the functionality stop
+    document.body.classList.remove("loading");
+    setSelectedItem(null);
+
+
+    // if (mouseMoveMode.current === "itemResizeStart" || mouseMoveMode.current === "itemResizeEnd") {
+    //   return setSelectedItem(null);
+    // }
+    // if (isClickedRef.current === true) {
+    //   isClickedRef.current = false;
+    //   return setSelectedItem(null);
+    // }
+    // isClickedRef.current = true;
+
+
+    // HW - keep item selected, but have the functionality stop
+    // HW - when selected, click a for arbeid, r for reise, colors based on that
     // HW - attach mouse events to document, and dismount
     // HW - attach clicking off on document to deselect the div previously selected
     // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
-    // when selected, click a for arbeid, r for reise, colors based on that
+    // correct the split handler to operate with three or more adjacent spans
   }
 
   function canvasMouseDown(e) {
@@ -358,36 +381,26 @@ export default function Fnc(props) {
       if (element.ID !== selectedItem.ID) {
         if (directionRight === true) {
           if (leadingEdge === true) {
-            if (
-              newTime > element.Start &&
-              newTime < element.End
-              // mouseMoveMode.current === "itemMove"
-            ) {
+            if (newTime > element.Start && newTime < element.End) {
               result = element.Start; // Update result instead of returning
             }
           } else if (leadingEdge === false) {
             if (
               selectedItem.End >= element.Start &&
               selectedItem.End <= element.End
-              // mouseMoveMode.current === "itemMove"
             ) {
               result = lastValidStartTime;
             }
           }
         } else if (directionRight === false) {
           if (leadingEdge === true) {
-            if (
-              newTime < element.End &&
-              newTime > element.Start
-              // && mouseMoveMode.current === "itemMove"
-            ) {
+            if (newTime < element.End && newTime > element.Start) {
               result = element.End;
             }
           } else if (leadingEdge === false) {
             if (
               selectedItem.Start >= element.Start &&
               selectedItem.Start <= element.End
-              // && mouseMoveMode.current === "itemMove"
             ) {
               result = lastValidEndTime;
             }
@@ -432,7 +445,7 @@ export default function Fnc(props) {
             height: "40px",
             backgroundColor: item.Status == "W" ? "red" : "blue",
             border:
-              selectedItem && selectedItem.ID === item.ID
+              selectedItem && selectedItem.ID === item.ID && mouseMoveMode.current !== "itemResizeSplit"
                 ? "2px solid yellow"
                 : "1px solid black",
             borderRadius: "5px",
