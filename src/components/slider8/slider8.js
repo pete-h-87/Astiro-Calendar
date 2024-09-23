@@ -85,8 +85,14 @@ export default function Fnc(props) {
     };
   }, [selectedItem, datasource]);
 
+  // useEffect(() => {
+
+  // })
+
   function timespanMouseDown(e) {
     e.preventDefault();
+    // document.addEventListener('mousemove', timespanMouseMove);
+    // document.addEventListener('mouseup', timespanMouseUp);
     let clickedItemData = e.currentTarget.dataset["id"];
     if (clickedItemData) {
       let id = Number(clickedItemData);
@@ -209,7 +215,7 @@ export default function Fnc(props) {
       cursor: cursorClass,
       element: e.currentTarget,
     };
-    e.currentTarget.classList.add(cursorClass);
+    e.currentTarget.classList.add(cursorClass); //confused on this
   }
 
   function handleItemMoveAndResize(e) {
@@ -263,36 +269,80 @@ export default function Fnc(props) {
     let timeMovedFactor = distancePoints / 510;
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
-    let changedItem = newState.find((item) => item.ID === selectedItem.ID);
-    let changedItemNeighbor = newState.find(
-      (item) =>
-        item.End === selectedItem.Start || item.Start === selectedItem.End
+    let clickedSpan = newState.find((item) => item.ID === selectedItem.ID);
+    // console.log(selectedItem)
+    let changedItemLeftNeighbor = newState.find(
+      (item) => item.End === selectedItem.Start
     );
-    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
-    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
-    let newNeighborStart =
-      changedItemNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
-    let newNeighborEnd =
-      changedItemNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+    let changedItemRightNeighbor = newState.find(
+      (item) => item.Start === selectedItem.End
+    );
+    
+    let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
+
+    // let newStartLeftNeighbor =
+    //   changedItemLeftNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+    // let newEndRightNeighbor =
+    //   changedItemLeftNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+
+    let newStartRightNeighbor =
+      changedItemRightNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEndLeftNeighbor =
+      changedItemLeftNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+
     if (distancePoints !== 0 && mouseMoveMode.current === "itemResizeSplit") {
-      if (changedItem.Start < changedItemNeighbor.Start) {
-        changedItem.End = newEnd;
-        changedItemNeighbor.Start = newNeighborStart;
-      } else {
-        changedItem.Start = newStart;
-        changedItemNeighbor.End = newNeighborEnd;
+      if (clickedSpan.End === changedItemRightNeighbor.Start) {
+        clickedSpan.End = newEnd;
+        changedItemRightNeighbor.Start = newStartRightNeighbor;
+      } else if (clickedSpan.Start === changedItemLeftNeighbor.End) {
+        console.log("xxx going");
+        clickedSpan.Start = newStart;
+        changedItemLeftNeighbor.End = newEndLeftNeighbor;
       }
     }
     mouseDownXPos.current = e.clientX;
     setDatasource(newState);
   }
 
+  // if (changedItem.Start < changedItemNeighbor.Start) {
+  //   changedItem.End = newEnd;
+  //   changedItemNeighbor.Start = newNeighborStart;
+  // } else {
+  //   changedItem.Start = newStart;
+  //   changedItemNeighbor.End = newNeighborEnd;
+  // }
+
+  // if (distancePoints !== 0 && mouseMoveMode.current === "itemResizeSplit") {
+  //   if (changedItem.Start < changedItemNeighbor.Start) {
+  //     if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+  //       console.log()
+  //     changedItem.End = newEnd;
+  //     changedItemNeighbor.Start = newNeighborStart;
+  //     } else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.2)
+  //     {
+  //       console.log()
+  //       // changedItem.End = newEnd;
+  //       // changedItemNeighbor.Start = newNeighborStart;
+  //     }
+  //   } else if (changedItem.Start > changedItemNeighbor.Start) {
+  //     if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+  //       console.log()
+  //     } else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.2) {
+  //       console.log()
+  //     changedItem.Start = newStart;
+  //     changedItemNeighbor.End = newNeighborEnd;
+  //     }
+  //   }
+  // }
+
   function timespanMouseUp(e) {
     e.preventDefault();
     mouseMoveMode.current = "";
     document.body.classList.remove("loading");
     setSelectedItem(null);
-
+    // document.removeEventListener('mousemove', timespanMouseMove);
+    // document.removeEventListener('mouseup', timespanMouseUp);
 
     // if (mouseMoveMode.current === "itemResizeStart" || mouseMoveMode.current === "itemResizeEnd") {
     //   return setSelectedItem(null);
@@ -303,14 +353,24 @@ export default function Fnc(props) {
     // }
     // isClickedRef.current = true;
 
-
     // HW - keep item selected, but have the functionality stop
     // HW - when selected, click a for arbeid, r for reise, colors based on that
     // HW - attach mouse events to document, and dismount
     // HW - attach clicking off on document to deselect the div previously selected
     // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
     // correct the split handler to operate with three or more adjacent spans
+    // HW - scrubbing
   }
+
+  // useEffect(() => {
+  //   document.addEventListener('timespanMouseMove', timespanMouseMove);
+  //   document.addEventListener('timespanMouseup', timespanMouseUp);
+
+  //   return () => {
+  //     document.removeEventListener('timespanMouseMove', timespanMouseMove);
+  //     document.removeEventListener('timespanMouseup', timespanMouseUp);
+  //   };
+  // });
 
   function canvasMouseDown(e) {
     startTimeRef.current = xPosToHourDecimal(e);
@@ -445,7 +505,9 @@ export default function Fnc(props) {
             height: "40px",
             backgroundColor: item.Status == "W" ? "red" : "blue",
             border:
-              selectedItem && selectedItem.ID === item.ID && mouseMoveMode.current !== "itemResizeSplit"
+              selectedItem &&
+              selectedItem.ID === item.ID &&
+              mouseMoveMode.current !== "itemResizeSplit"
                 ? "2px solid yellow"
                 : "1px solid black",
             borderRadius: "5px",
