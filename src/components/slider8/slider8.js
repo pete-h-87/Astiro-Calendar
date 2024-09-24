@@ -37,6 +37,7 @@ const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
 const isClickedRef = React.createRef();
+const resizingStart = React.createRef(false);
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
@@ -91,6 +92,7 @@ export default function Fnc(props) {
 
   function timespanMouseDown(e) {
     e.preventDefault();
+
     // document.addEventListener('mousemove', timespanMouseMove);
     // document.addEventListener('mouseup', timespanMouseUp);
     let clickedItemData = e.currentTarget.dataset["id"];
@@ -121,6 +123,7 @@ export default function Fnc(props) {
           if (Number(target.end) === anElement.Start) {
             if (hasNeighbor) {
               moveMode = "itemResizeSplit";
+              resizingStart.current = false;
               break;
             } else {
               moveMode = "itemResizeEnd";
@@ -135,6 +138,7 @@ export default function Fnc(props) {
           if (Number(target.start) === anElement.End) {
             if (hasNeighbor) {
               moveMode = "itemResizeSplit";
+              resizingStart.current = true;
               break;
             } else {
               moveMode = "itemResizeStart";
@@ -270,12 +274,14 @@ export default function Fnc(props) {
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
   
-    let changedItem = newState.find((item) => item.ID === selectedItem.ID);
+    let clickedSpan = newState.find((item) => item.ID === selectedItem.ID);
     
-    let changedItemNeighbor = newState.find(
+    let neighborSpan = newState.find(
       (item) =>
-        item.End === selectedItem.Start || item.Start === selectedItem.End
+        (item.End === selectedItem.Start && resizingStart.current) || (item.Start === selectedItem.End && !resizingStart.current)
     );
+
+    
 
     // let leftNeighbor = newState.find((item) => item.End === selectedItem.Start);
     // let rightNeighbor = newState.find(
@@ -287,21 +293,21 @@ export default function Fnc(props) {
     //   cursorElementRef.current = ""
     // }
   
-    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
-    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
+    let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
   
     let newNeighborStart =
-      changedItemNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+      neighborSpan.Start + Math.round(timeMovedHours * 4) / 4;
     let newNeighborEnd =
-      changedItemNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+      neighborSpan.End + Math.round(timeMovedHours * 4) / 4;
   
     if (distancePoints !== 0) {
-      if (changedItem.Start < changedItemNeighbor.Start) {
-        changedItem.End = newEnd;
-        changedItemNeighbor.Start = newNeighborStart;
+      if (clickedSpan.Start < neighborSpan.Start) {
+        clickedSpan.End = newEnd;
+        neighborSpan.Start = newNeighborStart;
       } else {
-        changedItem.Start = newStart;
-        changedItemNeighbor.End = newNeighborEnd;
+        clickedSpan.Start = newStart;
+        neighborSpan.End = newNeighborEnd;
       }
     }
     mouseDownXPos.current = e.clientX;
