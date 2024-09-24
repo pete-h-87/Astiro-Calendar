@@ -144,7 +144,7 @@ export default function Fnc(props) {
           }
         }
       }
-      console.log(moveMode);
+      // console.log(moveMode);
       mouseMoveMode.current = moveMode;
       mouseDownXPos.current = e.clientX;
       //setting done
@@ -269,41 +269,89 @@ export default function Fnc(props) {
     let timeMovedFactor = distancePoints / 510;
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
-    let clickedSpan = newState.find((item) => item.ID === selectedItem.ID);
-    // console.log(selectedItem)
-    let changedItemLeftNeighbor = newState.find(
-      (item) => item.End === selectedItem.Start
-    );
-    let changedItemRightNeighbor = newState.find(
-      (item) => item.Start === selectedItem.End
-    );
+  
+    let changedItem = newState.find((item) => item.ID === selectedItem.ID);
     
-    let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
-    let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
-
-    // let newStartLeftNeighbor =
-    //   changedItemLeftNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
-    // let newEndRightNeighbor =
-    //   changedItemLeftNeighbor.End + Math.round(timeMovedHours * 4) / 4;
-
-    let newStartRightNeighbor =
-      changedItemRightNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
-    let newEndLeftNeighbor =
-      changedItemLeftNeighbor.End + Math.round(timeMovedHours * 4) / 4;
-
-    if (distancePoints !== 0 && mouseMoveMode.current === "itemResizeSplit") {
-      if (clickedSpan.End === changedItemRightNeighbor.Start) {
-        clickedSpan.End = newEnd;
-        changedItemRightNeighbor.Start = newStartRightNeighbor;
-      } else if (clickedSpan.Start === changedItemLeftNeighbor.End) {
-        console.log("xxx going");
-        clickedSpan.Start = newStart;
-        changedItemLeftNeighbor.End = newEndLeftNeighbor;
+    let changedItemNeighbor = newState.find(
+      (item) =>
+        item.End === selectedItem.Start || item.Start === selectedItem.End
+    );
+  
+    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
+  
+    let newNeighborStart =
+      changedItemNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+    let newNeighborEnd =
+      changedItemNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+  
+    if (distancePoints !== 0) {
+      if (changedItem.Start < changedItemNeighbor.Start) {
+        changedItem.End = newEnd;
+        changedItemNeighbor.Start = newNeighborStart;
+      } else {
+        changedItem.Start = newStart;
+        changedItemNeighbor.End = newNeighborEnd;
       }
     }
     mouseDownXPos.current = e.clientX;
     setDatasource(newState);
   }
+
+
+  // function handleSplitResize(e) {
+  //   e.preventDefault();
+  //   let nowPosX = e.clientX;
+  //   let distancePoints = nowPosX - mouseDownXPos.current;
+  //   if (Math.abs(distancePoints) < 5) return;
+  //   let timeMovedFactor = distancePoints / 510;
+  //   let timeMovedHours = timeMovedFactor * 24;
+  //   let newState = [...datasource];
+
+  //   let clickedSpan = newState.find((item) => item.ID === selectedItem.ID);
+
+  //   let leftNeighbor = newState.find((item) => item.End === selectedItem.Start);
+
+  //   let rightNeighbor = newState.find(
+  //     (item) => item.Start === selectedItem.End
+  //   );
+
+  //   let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
+  //   let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
+
+  //   let newStartRightNeighbor =
+  //     rightNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+  //   let newEndLeftNeighbor =
+  //     leftNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+
+
+  //   if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+  //     if (distancePoints !== 0) {
+  //       console.log("END click moving");
+  //       clickedSpan.End = newEnd;
+  //       rightNeighbor.Start = newStartRightNeighbor;
+  //     }
+  //   } else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.2) {
+  //     if (distancePoints !== 0) {
+  //       console.log("START click moving");
+  //       clickedSpan.Start = newStart;
+  //       leftNeighbor.End = newEndLeftNeighbor;
+  //     }
+  //   }
+
+  //   mouseDownXPos.current = e.clientX;
+  //   setDatasource(newState);
+  // }
+
+
+
+
+
+
+  // let newStartLeftNeighbor =
+  //   changedItemLeftNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+  // let newEndRightNeighbor =
+  //   changedItemLeftNeighbor.End + Math.round(timeMovedHours * 4) / 4;
 
   // if (changedItem.Start < changedItemNeighbor.Start) {
   //   changedItem.End = newEnd;
@@ -341,6 +389,7 @@ export default function Fnc(props) {
     mouseMoveMode.current = "";
     document.body.classList.remove("loading");
     setSelectedItem(null);
+
     // document.removeEventListener('mousemove', timespanMouseMove);
     // document.removeEventListener('mouseup', timespanMouseUp);
 
@@ -352,15 +401,15 @@ export default function Fnc(props) {
     //   return setSelectedItem(null);
     // }
     // isClickedRef.current = true;
-
-    // HW - keep item selected, but have the functionality stop
-    // HW - when selected, click a for arbeid, r for reise, colors based on that
-    // HW - attach mouse events to document, and dismount
-    // HW - attach clicking off on document to deselect the div previously selected
-    // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
-    // correct the split handler to operate with three or more adjacent spans
-    // HW - scrubbing
   }
+
+  // HW - keep item selected, but have the functionality stop
+  // HW - when selected, click a for arbeid, r for reise, colors based on that
+  // HW - attach mouse events to document, and dismount
+  // HW - attach clicking off on document to deselect the div previously selected
+  // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
+  // correct the split handler to operate with three or more adjacent spans
+  // HW - scrubbing
 
   // useEffect(() => {
   //   document.addEventListener('timespanMouseMove', timespanMouseMove);
