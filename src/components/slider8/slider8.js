@@ -276,6 +276,16 @@ export default function Fnc(props) {
       (item) =>
         item.End === selectedItem.Start || item.Start === selectedItem.End
     );
+
+    // let leftNeighbor = newState.find((item) => item.End === selectedItem.Start);
+    // let rightNeighbor = newState.find(
+    //   (item) => item.Start === selectedItem.End
+    // );
+
+    // if (rightNeighbor && leftNeighbor && e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+    //   mouseMoveMode.current = "";
+    //   cursorElementRef.current = ""
+    // }
   
     let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
     let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
@@ -410,6 +420,8 @@ export default function Fnc(props) {
   // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
   // correct the split handler to operate with three or more adjacent spans
   // HW - scrubbing
+
+  
 
   // useEffect(() => {
   //   document.addEventListener('timespanMouseMove', timespanMouseMove);
