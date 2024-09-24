@@ -36,7 +36,7 @@ const endTimeRef = React.createRef();
 const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
-const isClickedRef = React.createRef();
+const canvasRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
@@ -93,7 +93,7 @@ export default function Fnc(props) {
     e.preventDefault();
     // document.addEventListener('mousemove', timespanMouseMove);
     // document.addEventListener('mouseup', timespanMouseUp);
-    let clickedItemData = e.currentTarget.dataset["id"];
+    let clickedItemData = e.target.dataset["id"];
     if (clickedItemData) {
       let id = Number(clickedItemData);
       let item = datasource.find((element) => element.ID === id);
@@ -226,9 +226,9 @@ export default function Fnc(props) {
     let timeMovedFactor = distancePoints / 510;
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
-    let changedItem = newState.find((item) => item.ID === selectedItem.ID); // now, we can find the ID because
-    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4; // the CLICK is first, the movement is second
-    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
+    let clickedSpan = newState.find((item) => item.ID === selectedItem.ID); // now, we can find the ID because
+    let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4; // the CLICK is first, the movement is second
+    let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
     if (distancePoints > 0 && mouseMoveMode.current === "itemMove") {
       newEnd = getOverlapBorder(newEnd, true, true);
       newStart = getOverlapBorder(newStart, true, false);
@@ -241,21 +241,21 @@ export default function Fnc(props) {
       mouseMoveMode.current === "itemResizeStart" ||
       mouseMoveMode.current === "itemMove"
     ) {
-      changedItem.Start = newStart;
+      clickedSpan.Start = newStart;
     }
     if (
       mouseMoveMode.current === "itemResizeEnd" ||
       mouseMoveMode.current === "itemMove"
     ) {
-      changedItem.End = newEnd;
+      clickedSpan.End = newEnd;
     }
     if (distancePoints < 0 && mouseMoveMode.current === "itemResizeStart") {
       newStart = getOverlapBorder(newStart, false, true);
-      changedItem.Start = newStart;
+      clickedSpan.Start = newStart;
     }
     if (distancePoints > 0 && mouseMoveMode.current === "itemResizeEnd") {
       newEnd = getOverlapBorder(newEnd, true, true);
-      changedItem.End = newEnd;
+      clickedSpan.End = newEnd;
     }
     mouseDownXPos.current = e.clientX;
     setDatasource(newState);
@@ -270,38 +270,28 @@ export default function Fnc(props) {
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
   
-    let changedItem = newState.find((item) => item.ID === selectedItem.ID);
+    let clickedSpan = newState.find((item) => item.ID === selectedItem.ID);
     
-    let changedItemNeighbor = newState.find(
+    let neighbor = newState.find(
       (item) =>
         item.End === selectedItem.Start || item.Start === selectedItem.End
     );
-
-    // let leftNeighbor = newState.find((item) => item.End === selectedItem.Start);
-    // let rightNeighbor = newState.find(
-    //   (item) => item.Start === selectedItem.End
-    // );
-
-    // if (rightNeighbor && leftNeighbor && e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-    //   mouseMoveMode.current = "";
-    //   cursorElementRef.current = ""
-    // }
   
-    let newStart = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
-    let newEnd = changedItem.End + Math.round(timeMovedHours * 4) / 4;
+    let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
+    let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
   
     let newNeighborStart =
-      changedItemNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
+      neighbor.Start + Math.round(timeMovedHours * 4) / 4;
     let newNeighborEnd =
-      changedItemNeighbor.End + Math.round(timeMovedHours * 4) / 4;
+      neighbor.End + Math.round(timeMovedHours * 4) / 4;
   
     if (distancePoints !== 0) {
-      if (changedItem.Start < changedItemNeighbor.Start) {
-        changedItem.End = newEnd;
-        changedItemNeighbor.Start = newNeighborStart;
+      if (clickedSpan.Start < neighbor.Start) {
+        clickedSpan.End = newEnd;
+        neighbor.Start = newNeighborStart;
       } else {
-        changedItem.Start = newStart;
-        changedItemNeighbor.End = newNeighborEnd;
+        clickedSpan.Start = newStart;
+        neighbor.End = newNeighborEnd;
       }
     }
     mouseDownXPos.current = e.clientX;
@@ -413,25 +403,46 @@ export default function Fnc(props) {
     // isClickedRef.current = true;
   }
 
+
+
+
   // HW - keep item selected, but have the functionality stop
   // HW - when selected, click a for arbeid, r for reise, colors based on that
+
   // HW - attach mouse events to document, and dismount
   // HW - attach clicking off on document to deselect the div previously selected
-  // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
-  // correct the split handler to operate with three or more adjacent spans
   // HW - scrubbing
 
-  
+  // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
+  // correct the split handler to operate with three or more adjacent spans
+  // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
+  // HW - fix the triple stack problem
 
-  // useEffect(() => {
-  //   document.addEventListener('timespanMouseMove', timespanMouseMove);
-  //   document.addEventListener('timespanMouseup', timespanMouseUp);
+  function mouseDown(e) {
+    timespanMouseDown(e)
+  }
 
-  //   return () => {
-  //     document.removeEventListener('timespanMouseMove', timespanMouseMove);
-  //     document.removeEventListener('timespanMouseup', timespanMouseUp);
-  //   };
-  // });
+  function mouseMove(e) {
+    canvasMouseMove(e);
+    // timespanMouseMove(e);
+  }
+
+  function mouseUp(e) {
+
+  }
+
+
+  useEffect(() => {
+    document.addEventListener('mousedown', mouseDown);
+    document.addEventListener('mousemove', mouseMove);
+    document.addEventListener('mouseup', mouseUp);
+
+    return () => {
+      document.removeEventListener('mousedown', mouseDown);
+      document.removeEventListener('mousemove', mouseMove);
+      document.removeEventListener('mouseup', mouseUp);
+    };
+  }, []);
 
   function canvasMouseDown(e) {
     startTimeRef.current = xPosToHourDecimal(e);
@@ -452,8 +463,8 @@ export default function Fnc(props) {
   }
 
   function canvasMouseMove(e) {
-    let relativePos = e.clientX - e.target.offsetLeft;
-    let totalWidth = e.target.offsetWidth;
+    let relativePos = e.clientX - canvasRef.current.offsetLeft;
+    let totalWidth = canvasRef.current.offsetWidth;
     let positionFactor = relativePos / totalWidth;
     let hoursDecimal = 24 * positionFactor;
     let hours = Math.floor(hoursDecimal);
@@ -547,9 +558,10 @@ export default function Fnc(props) {
           border: "1px solid black",
         }}
         id="canvas"
-        onMouseMove={canvasMouseMove}
-        onMouseDown={canvasMouseDown}
-        onMouseUp={canvasMouseUp}
+        ref={canvasRef}
+        // onMouseMove={canvasMouseMove}
+        // onMouseDown={canvasMouseDown}
+        // onMouseUp={canvasMouseUp}
       />
       {datasource.map((item) => (
         <div
@@ -575,9 +587,9 @@ export default function Fnc(props) {
             // cursor: {cursor}
           }}
           title={item.Text}
-          onMouseDown={timespanMouseDown}
-          onMouseUp={timespanMouseUp}
-          onMouseMove={timespanMouseMove}
+          // onMouseDown={timespanMouseDown}
+          // onMouseUp={timespanMouseUp}
+          // onMouseMove={timespanMouseMove}
         ></div>
       ))}
       {/* <div style={{position:'absolute', left:'100px', top: '130px', width: '510px', height:'40px', backgroundColor: 'red'}} title='03:45 - 12:30 - Customer: Brødrene Jacobsen: ' ></div> */}
