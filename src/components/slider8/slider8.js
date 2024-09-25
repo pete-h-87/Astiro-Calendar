@@ -36,7 +36,6 @@ const endTimeRef = React.createRef();
 const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
-const isClickedRef = React.createRef();
 const resizingStart = React.createRef(false);
 const canvasRef = React.createRef();
 
@@ -216,11 +215,14 @@ export default function Fnc(props) {
       }
     }
     removeMoveCursor();
+
     cursorElementRef.current = {
       cursor: cursorClass,
-      element: e.currentTarget,
+      element: e.target,
     };
-    e.currentTarget.classList.add(cursorClass); //confused on this
+    // console.log(e.currentTarget)
+
+    e.target.classList.add(cursorClass); //confused on this
   }
 
   function handleItemMoveAndResize(e) {
@@ -274,8 +276,8 @@ export default function Fnc(props) {
     let timeMovedFactor = distancePoints / 510;
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
-  
-    let clickedSpan = newState.find((item) => item.ID === selectedItem.ID);
+    console.log(newState)
+    let clickedSpan = newState.find((item) => Number(item.ID) === Number(selectedItem.ID));
     
     let neighbor = newState.find(
       (item) =>
@@ -323,11 +325,6 @@ export default function Fnc(props) {
   }
 
 
-
-
-  // HW - keep item selected, but have the functionality stop
-  // HW - when selected, click a for arbeid, r for reise, colors based on that
-
   // HW - attach mouse events to document, and dismount
   // HW - attach clicking off on document to deselect the div previously selected
   // HW - scrubbing
@@ -335,19 +332,20 @@ export default function Fnc(props) {
   // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
   // correct the split handler to operate with three or more adjacent spans
   // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
-  // HW - fix the triple stack problem
 
   function mouseDown(e) {
+    canvasMouseDown(e)
     timespanMouseDown(e)
   }
 
   function mouseMove(e) {
     canvasMouseMove(e);
-    // timespanMouseMove(e);
+    timespanMouseMove(e);
   }
 
   function mouseUp(e) {
-
+    canvasMouseUp(e)
+    timespanMouseUp(e)
   }
 
 
