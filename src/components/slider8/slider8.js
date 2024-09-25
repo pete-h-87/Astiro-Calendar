@@ -281,7 +281,7 @@ export default function Fnc(props) {
     
     let neighbor = newState.find(
       (item) =>
-        item.End === selectedItem.Start || item.Start === selectedItem.End
+        (item.End === selectedItem.Start && resizingStart.current) || (item.Start === selectedItem.End && !resizingStart.current)
     );
   
     let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
