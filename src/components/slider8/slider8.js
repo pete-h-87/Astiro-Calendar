@@ -38,6 +38,7 @@ const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
 const isClickedRef = React.createRef();
 const resizingStart = React.createRef(false);
+const canvasRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
