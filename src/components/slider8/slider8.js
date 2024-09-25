@@ -280,18 +280,6 @@ export default function Fnc(props) {
       (item) =>
         (item.End === selectedItem.Start && resizingStart.current) || (item.Start === selectedItem.End && !resizingStart.current)
     );
-
-    
-
-    // let leftNeighbor = newState.find((item) => item.End === selectedItem.Start);
-    // let rightNeighbor = newState.find(
-    //   (item) => item.Start === selectedItem.End
-    // );
-
-    // if (rightNeighbor && leftNeighbor && e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-    //   mouseMoveMode.current = "";
-    //   cursorElementRef.current = ""
-    // }
   
     let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
     let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
@@ -313,92 +301,6 @@ export default function Fnc(props) {
     mouseDownXPos.current = e.clientX;
     setDatasource(newState);
   }
-
-
-  // function handleSplitResize(e) {
-  //   e.preventDefault();
-  //   let nowPosX = e.clientX;
-  //   let distancePoints = nowPosX - mouseDownXPos.current;
-  //   if (Math.abs(distancePoints) < 5) return;
-  //   let timeMovedFactor = distancePoints / 510;
-  //   let timeMovedHours = timeMovedFactor * 24;
-  //   let newState = [...datasource];
-
-  //   let clickedSpan = newState.find((item) => item.ID === selectedItem.ID);
-
-  //   let leftNeighbor = newState.find((item) => item.End === selectedItem.Start);
-
-  //   let rightNeighbor = newState.find(
-  //     (item) => item.Start === selectedItem.End
-  //   );
-
-  //   let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
-  //   let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
-
-  //   let newStartRightNeighbor =
-  //     rightNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
-  //   let newEndLeftNeighbor =
-  //     leftNeighbor.End + Math.round(timeMovedHours * 4) / 4;
-
-
-  //   if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-  //     if (distancePoints !== 0) {
-  //       console.log("END click moving");
-  //       clickedSpan.End = newEnd;
-  //       rightNeighbor.Start = newStartRightNeighbor;
-  //     }
-  //   } else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.2) {
-  //     if (distancePoints !== 0) {
-  //       console.log("START click moving");
-  //       clickedSpan.Start = newStart;
-  //       leftNeighbor.End = newEndLeftNeighbor;
-  //     }
-  //   }
-
-  //   mouseDownXPos.current = e.clientX;
-  //   setDatasource(newState);
-  // }
-
-
-
-
-
-
-  // let newStartLeftNeighbor =
-  //   changedItemLeftNeighbor.Start + Math.round(timeMovedHours * 4) / 4;
-  // let newEndRightNeighbor =
-  //   changedItemLeftNeighbor.End + Math.round(timeMovedHours * 4) / 4;
-
-  // if (changedItem.Start < changedItemNeighbor.Start) {
-  //   changedItem.End = newEnd;
-  //   changedItemNeighbor.Start = newNeighborStart;
-  // } else {
-  //   changedItem.Start = newStart;
-  //   changedItemNeighbor.End = newNeighborEnd;
-  // }
-
-  // if (distancePoints !== 0 && mouseMoveMode.current === "itemResizeSplit") {
-  //   if (changedItem.Start < changedItemNeighbor.Start) {
-  //     if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-  //       console.log()
-  //     changedItem.End = newEnd;
-  //     changedItemNeighbor.Start = newNeighborStart;
-  //     } else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.2)
-  //     {
-  //       console.log()
-  //       // changedItem.End = newEnd;
-  //       // changedItemNeighbor.Start = newNeighborStart;
-  //     }
-  //   } else if (changedItem.Start > changedItemNeighbor.Start) {
-  //     if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
-  //       console.log()
-  //     } else if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.2) {
-  //       console.log()
-  //     changedItem.Start = newStart;
-  //     changedItemNeighbor.End = newNeighborEnd;
-  //     }
-  //   }
-  // }
 
   function timespanMouseUp(e) {
     e.preventDefault();
