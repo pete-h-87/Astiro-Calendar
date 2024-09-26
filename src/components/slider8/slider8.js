@@ -37,7 +37,8 @@ const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
 const resizingStart = React.createRef(false);
-const canvasRef = React.createRef();
+const canvasRef = React.createRef(false);
+const spanRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
@@ -147,6 +148,7 @@ export default function Fnc(props) {
 
   function timespanMouseMove(e) {
     e.preventDefault();
+    spanRef.current = true;
     if (
       (selectedItem && mouseMoveMode.current === "itemMove") ||
       mouseMoveMode.current === "itemResizeStart" ||
@@ -172,7 +174,8 @@ export default function Fnc(props) {
     for (let index = 0; index < datasource.length; index++) {
       const anElement = datasource[index];
       const target = e.target.dataset;
-      if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8) {
+      const divId = Number(target.id); 
+      if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8 && datasource.some(item => item.ID === divId)) {
         if (Number(target.end) === anElement.Start) {
           if (hasNeighbor) {
             cursorClass = "cursor-col-resize";
@@ -183,7 +186,7 @@ export default function Fnc(props) {
         } else {
           cursorClass = "cursor-w-resize";
         }
-      } else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2) {
+      } else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 && datasource.some(item => item.ID === divId)) {
         if (Number(target.start) === anElement.End) {
           if (hasNeighbor) {
             cursorClass = "cursor-col-resize";
@@ -279,6 +282,7 @@ export default function Fnc(props) {
 
   function timespanMouseUp(e) {
     e.preventDefault();
+    spanRef.current = false;
     mouseMoveMode.current = "";
     document.body.classList.remove("loading");
     setSelectedItem(null);
@@ -293,21 +297,23 @@ export default function Fnc(props) {
   // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
 
   useEffect(() => {
+    
     document.addEventListener("mousedown", timespanMouseDown);
     document.addEventListener("mousemove", timespanMouseMove);
     document.addEventListener("mouseup", timespanMouseUp);
 
     // document.addEventListener('mousedown', canvasMouseDown);
-    document.addEventListener("mousemove", canvasMouseMove);
+    // document.addEventListener("mousemove", canvasMouseMove);
     // document.addEventListener('mouseup', canvasMouseUp);
 
     return () => {
+
       document.removeEventListener("mousedown", timespanMouseDown);
       document.removeEventListener("mousemove", timespanMouseMove);
       document.removeEventListener("mouseup", timespanMouseUp);
 
       // document.removeEventListener('mousedown', canvasMouseDown);
-      document.removeEventListener("mousemove", canvasMouseMove);
+      // document.removeEventListener("mousemove", canvasMouseMove);
       // document.removeEventListener('mouseup', canvasMouseUp);
     };
   });
@@ -315,7 +321,7 @@ export default function Fnc(props) {
   function canvasMouseDown(e) {
     startTimeRef.current = xPosToHourDecimal(e);
     endTimeRef.current = e.target.dataset.End;
-    console.log(e.target.dataset.End);
+    // console.log(e.target.dataset.End);
     let newState = [...datasource];
     let newItem = {
       ID: datasource.length + 1,
@@ -331,6 +337,9 @@ export default function Fnc(props) {
   }
 
   function canvasMouseMove(e) {
+    removeMoveCursor()
+    // console.log(cursorElementRef.current)
+    // cursorElementRef.current.cursor = null;
     let relativePos = e.clientX - canvasRef.current.offsetLeft;
     let totalWidth = canvasRef.current.offsetWidth;
     let positionFactor = relativePos / totalWidth;
@@ -427,12 +436,13 @@ export default function Fnc(props) {
         }}
         id="canvas"
         ref={canvasRef}
-        // onMouseMove={canvasMouseMove}
+        onMouseMove={canvasMouseMove}
         onMouseDown={canvasMouseDown}
-        // onMouseUp={canvasMouseUp}
+        onMouseUp={canvasMouseUp}
       />
       {datasource.map((item) => (
         <div
+        ref={spanRef}
           //className='cursor-w-resize'
           key={item.ID}
           data-id={item.ID}
