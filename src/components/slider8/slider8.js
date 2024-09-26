@@ -43,7 +43,6 @@ export default function Fnc(props) {
   const [time, setTime] = useState();
   const [selectedItem, setSelectedItem] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
-  // const [cursor, setCursor] = useState("w-resize");
 
   function decimalToXpoint(hourDecimal) {
     let posFactor = hourDecimal / 24;
@@ -86,15 +85,8 @@ export default function Fnc(props) {
     };
   }, [selectedItem, datasource]);
 
-  // useEffect(() => {
-
-  // })
-
   function timespanMouseDown(e) {
     e.preventDefault();
-
-    // document.addEventListener('mousemove', timespanMouseMove);
-    // document.addEventListener('mouseup', timespanMouseUp);
     let clickedItemData = e.target.dataset["id"];
     if (clickedItemData) {
       let id = Number(clickedItemData);
@@ -105,12 +97,11 @@ export default function Fnc(props) {
       for (let index = 0; index < datasource.length; index++) {
         const anElement = datasource[index];
         const target = e.target.dataset;
-        // console.log(e.target.dataset)
+
         if (
           Number(target.end) === anElement.Start ||
           Number(target.start) === anElement.End
         ) {
-          // console.log(anElement)
           hasNeighbor = true;
           break;
         }
@@ -148,19 +139,10 @@ export default function Fnc(props) {
           }
         }
       }
-      // console.log(moveMode);
       mouseMoveMode.current = moveMode;
       mouseDownXPos.current = e.clientX;
-      //setting done
       document.body.classList.add("loading");
-      // let element = document.getElementById(clickedItemData.ID)
-      // if (element) {
-      //   element.classList.add("cursor-w-resize")
-      // }
     }
-    // if (selectedItem) {
-    //   setSelectedItem(null)
-    // }
   }
 
   function timespanMouseMove(e) {
@@ -215,13 +197,10 @@ export default function Fnc(props) {
       }
     }
     removeMoveCursor();
-
     cursorElementRef.current = {
       cursor: cursorClass,
       element: e.target,
     };
-    // console.log(e.currentTarget)
-
     e.target.classList.add(cursorClass); //confused on this
   }
 
@@ -239,7 +218,6 @@ export default function Fnc(props) {
     if (distancePoints > 0 && mouseMoveMode.current === "itemMove") {
       newEnd = getOverlapBorder(newEnd, true, true);
       newStart = getOverlapBorder(newStart, true, false);
-      // console.log(newStart)
     } else if (distancePoints < 0 && mouseMoveMode.current === "itemMove") {
       newEnd = getOverlapBorder(newEnd, false, false);
       newStart = getOverlapBorder(newStart, false, true);
@@ -276,22 +254,16 @@ export default function Fnc(props) {
     let timeMovedFactor = distancePoints / 510;
     let timeMovedHours = timeMovedFactor * 24;
     let newState = [...datasource];
-    console.log(newState)
-    let clickedSpan = newState.find((item) => Number(item.ID) === Number(selectedItem.ID));
-    
+    let clickedSpan = newState.find((item) => item.ID === selectedItem.ID);
     let neighbor = newState.find(
       (item) =>
-        (item.End === selectedItem.Start && resizingStart.current) || (item.Start === selectedItem.End && !resizingStart.current)
+        (item.End === selectedItem.Start && resizingStart.current) ||
+        (item.Start === selectedItem.End && !resizingStart.current)
     );
-  
     let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4;
     let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
-  
-    let newNeighborStart =
-      neighbor.Start + Math.round(timeMovedHours * 4) / 4;
-    let newNeighborEnd =
-      neighbor.End + Math.round(timeMovedHours * 4) / 4;
-  
+    let newNeighborStart = neighbor.Start + Math.round(timeMovedHours * 4) / 4;
+    let newNeighborEnd = neighbor.End + Math.round(timeMovedHours * 4) / 4;
     if (distancePoints !== 0) {
       if (clickedSpan.Start < neighbor.Start) {
         clickedSpan.End = newEnd;
@@ -310,20 +282,7 @@ export default function Fnc(props) {
     mouseMoveMode.current = "";
     document.body.classList.remove("loading");
     setSelectedItem(null);
-
-    // document.removeEventListener('mousemove', timespanMouseMove);
-    // document.removeEventListener('mouseup', timespanMouseUp);
-
-    // if (mouseMoveMode.current === "itemResizeStart" || mouseMoveMode.current === "itemResizeEnd") {
-    //   return setSelectedItem(null);
-    // }
-    // if (isClickedRef.current === true) {
-    //   isClickedRef.current = false;
-    //   return setSelectedItem(null);
-    // }
-    // isClickedRef.current = true;
   }
-
 
   // HW - attach mouse events to document, and dismount
   // HW - attach clicking off on document to deselect the div previously selected
@@ -333,33 +292,25 @@ export default function Fnc(props) {
   // correct the split handler to operate with three or more adjacent spans
   // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
 
-  function mouseDown(e) {
-    canvasMouseDown(e)
-    timespanMouseDown(e)
-  }
-
-  function mouseMove(e) {
-    canvasMouseMove(e);
-    timespanMouseMove(e);
-  }
-
-  function mouseUp(e) {
-    canvasMouseUp(e)
-    timespanMouseUp(e)
-  }
-
-
   useEffect(() => {
-    document.addEventListener('mousedown', mouseDown);
-    document.addEventListener('mousemove', mouseMove);
-    document.addEventListener('mouseup', mouseUp);
+    document.addEventListener("mousedown", timespanMouseDown);
+    document.addEventListener("mousemove", timespanMouseMove);
+    document.addEventListener("mouseup", timespanMouseUp);
+
+    // document.addEventListener('mousedown', canvasMouseDown);
+    document.addEventListener("mousemove", canvasMouseMove);
+    // document.addEventListener('mouseup', canvasMouseUp);
 
     return () => {
-      document.removeEventListener('mousedown', mouseDown);
-      document.removeEventListener('mousemove', mouseMove);
-      document.removeEventListener('mouseup', mouseUp);
+      document.removeEventListener("mousedown", timespanMouseDown);
+      document.removeEventListener("mousemove", timespanMouseMove);
+      document.removeEventListener("mouseup", timespanMouseUp);
+
+      // document.removeEventListener('mousedown', canvasMouseDown);
+      document.removeEventListener("mousemove", canvasMouseMove);
+      // document.removeEventListener('mouseup', canvasMouseUp);
     };
-  }, []);
+  });
 
   function canvasMouseDown(e) {
     startTimeRef.current = xPosToHourDecimal(e);
@@ -477,7 +428,7 @@ export default function Fnc(props) {
         id="canvas"
         ref={canvasRef}
         // onMouseMove={canvasMouseMove}
-        // onMouseDown={canvasMouseDown}
+        onMouseDown={canvasMouseDown}
         // onMouseUp={canvasMouseUp}
       />
       {datasource.map((item) => (
