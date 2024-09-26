@@ -321,7 +321,6 @@ export default function Fnc(props) {
   function canvasMouseDown(e) {
     startTimeRef.current = xPosToHourDecimal(e);
     endTimeRef.current = e.target.dataset.End;
-    // console.log(e.target.dataset.End);
     let newState = [...datasource];
     let newItem = {
       ID: datasource.length + 1,
@@ -338,8 +337,6 @@ export default function Fnc(props) {
 
   function canvasMouseMove(e) {
     removeMoveCursor()
-    // console.log(cursorElementRef.current)
-    // cursorElementRef.current.cursor = null;
     let relativePos = e.clientX - canvasRef.current.offsetLeft;
     let totalWidth = canvasRef.current.offsetWidth;
     let positionFactor = relativePos / totalWidth;
@@ -349,21 +346,21 @@ export default function Fnc(props) {
     minutes = minutes * 60;
     minutes = Math.round(minutes / 5) * 5;
     setTime(pad(hours, 2) + ":" + pad(minutes, 2));
+
     if (mouseMoveMode.current === "newItemEnd") {
       let end = xPosToHourDecimal(e);
-      //let updatedItem = {...selectedItem, End:end}
       let newState = [...datasource];
       let changedItem = newState.find((item) => item.ID === selectedItem.ID);
       changedItem.End = end;
-      // endTimeRef.current = changedItem.End;
       setDatasource(newState);
-    } else if (
-      mouseMoveMode.current === "itemMove" ||
-      mouseMoveMode.current === "itemResizeStart" ||
-      mouseMoveMode.current === "itemResizeEnd"
-    ) {
-      handleItemMoveAndResize(e);
-    }
+    } 
+    // else if (
+    //   mouseMoveMode.current === "itemMove" ||
+    //   mouseMoveMode.current === "itemResizeStart" ||
+    //   mouseMoveMode.current === "itemResizeEnd"
+    // ) {
+    //   handleItemMoveAndResize(e);
+    // }
   }
 
   function canvasMouseUp(e) {
