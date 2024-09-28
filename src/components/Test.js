@@ -1,4 +1,12 @@
 import React, { useState, useEffect } from "react";
+import styles from "./slider8.module.css";
+
+const defaultCompanyTasks = [
+  "Bandak: Service on machine",
+  "Bandak: Service on gantry",
+  "Bandak: Service on valves",
+  "Bandak: Service on hydraulics",
+];
 
 const defaultData = [
   {
@@ -35,6 +43,7 @@ const startTimeRef = React.createRef();
 const endTimeRef = React.createRef();
 const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
+const canvasMouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
 const resizingStart = React.createRef(false);
 const canvasRef = React.createRef(false);
@@ -180,8 +189,11 @@ export default function Fnc(props) {
     for (let index = 0; index < datasource.length; index++) {
       const anElement = datasource[index];
       const target = e.target.dataset;
-      const divId = Number(target.id); 
-      if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8 && datasource.some(item => item.ID === divId)) {
+      const divId = Number(target.id);
+      if (
+        e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8 &&
+        datasource.some((item) => item.ID === divId)
+      ) {
         if (Number(target.end) === anElement.Start) {
           if (hasNeighbor) {
             cursorClass = "cursor-col-resize";
@@ -192,7 +204,10 @@ export default function Fnc(props) {
         } else {
           cursorClass = "cursor-w-resize";
         }
-      } else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 && datasource.some(item => item.ID === divId)) {
+      } else if (
+        e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 &&
+        datasource.some((item) => item.ID === divId)
+      ) {
         if (Number(target.start) === anElement.End) {
           if (hasNeighbor) {
             cursorClass = "cursor-col-resize";
@@ -211,8 +226,8 @@ export default function Fnc(props) {
       element: e.target,
     };
     e.target.classList.add(cursorClass); //confused on this
-  // }
-}
+    // }
+  }
 
   function handleItemMoveAndResize(e) {
     e.preventDefault();
@@ -296,46 +311,41 @@ export default function Fnc(props) {
     setSelectedItem(null);
   }
 
-  // HW - attach canvasMouseMove and Up to document with no interference
+  function handleRightClick(e) {
+    e.preventDefault();
+    console.log("handled");
+    let x = document.getElementById("myDropdown");
+    console.log(x);
+    document.getElementById("myDropdown").classList.toggle(styles.show);
+  }
+
   // HW - scrubbing
   // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
   // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
+  // HW - ability to go left when creating span
 
   useEffect(() => {
-    
     if (!canvasClicked) {
-    document.addEventListener("mousedown", timespanMouseDown);
-    document.addEventListener("mousemove", timespanMouseMove);
-    document.addEventListener("mouseup", timespanMouseUp);
-
-    // document.addEventListener('mousedown', canvasMouseDown);
-    // document.addEventListener("mousemove", canvasMouseMove);
-    // document.addEventListener('mouseup', canvasMouseUp);
-
-    return () => {
-
-      document.removeEventListener("mousedown", timespanMouseDown);
-      document.removeEventListener("mousemove", timespanMouseMove);
-      document.removeEventListener("mouseup", timespanMouseUp);
-    
-
-      // document.removeEventListener('mousedown', canvasMouseDown);
-      // document.removeEventListener("mousemove", canvasMouseMove);
-      // document.removeEventListener('mouseup', canvasMouseUp);
+      document.addEventListener("mousedown", timespanMouseDown);
+      document.addEventListener("mousemove", timespanMouseMove);
+      document.addEventListener("mouseup", timespanMouseUp);
+      return () => {
+        document.removeEventListener("mousedown", timespanMouseDown);
+        document.removeEventListener("mousemove", timespanMouseMove);
+        document.removeEventListener("mouseup", timespanMouseUp);
+      };
     }
-  }
 
-
-    document.addEventListener("mousemove", canvasMouseHover)
-    // document.addEventListener("mousemove", canvasMouseMove);
-    // document.addEventListener('mouseup', canvasMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", canvasMouseHover)
-      // document.removeEventListener("mousemove", canvasMouseMove);
-      // document.removeEventListener('mouseup', canvasMouseUp);
+    if (canvasClicked) {
+      // document.addEventListener("mousemove", canvasMouseHover)
+      document.addEventListener("mousemove", canvasMouseMove);
+      document.addEventListener("mouseup", canvasMouseUp);
+      return () => {
+        // document.removeEventListener("mousemove", canvasMouseHover)
+        document.removeEventListener("mousemove", canvasMouseMove);
+        document.removeEventListener("mouseup", canvasMouseUp);
+      };
     }
-  
   });
 
   function canvasMouseDown(e) {
@@ -355,11 +365,12 @@ export default function Fnc(props) {
     setDatasource(newState);
     setSelectedItem(newItem);
     mouseMoveMode.current = "newItemEnd";
+    canvasMouseDownXPos.current = e.clientX;
   }
 
   function canvasMouseHover(e) {
     e.preventDefault();
-    removeMoveCursor()
+    removeMoveCursor();
     let relativePos = e.clientX - canvasRef.current.offsetLeft;
     let totalWidth = canvasRef.current.offsetWidth;
     let positionFactor = relativePos / totalWidth;
@@ -373,26 +384,26 @@ export default function Fnc(props) {
 
   function canvasMouseMove(e) {
     e.preventDefault();
-    // if (spanClickedRef.current !== true) {
-    removeMoveCursor()
-    let relativePos = e.clientX - canvasRef.current.offsetLeft;
-    let totalWidth = canvasRef.current.offsetWidth;
-    let positionFactor = relativePos / totalWidth;
-    let hoursDecimal = 24 * positionFactor;
-    let hours = Math.floor(hoursDecimal);
-    let minutes = hoursDecimal - hours;
-    minutes = minutes * 60;
-    minutes = Math.round(minutes / 5) * 5;
-    setTime(pad(hours, 2) + ":" + pad(minutes, 2));
-
     if (mouseMoveMode.current === "newItemEnd") {
-      let end = xPosToHourDecimal(e);
+      let nowPosX = e.clientX;
+      let distancePoints = nowPosX - canvasMouseDownXPos.current;
+      if (Math.abs(distancePoints) < 5) return; //changed here to have it increment by .25, or 15 minutes
+      let timeMovedFactor = distancePoints / 510;
+      let timeMovedHours = timeMovedFactor * 24;
       let newState = [...datasource];
       let changedItem = newState.find((item) => item.ID === selectedItem.ID);
-      changedItem.End = end;
+      if (distancePoints > 0) {
+      let newEnd = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+      newEnd = getOverlapBorder(newEnd, true, true);
+      changedItem.End = newEnd;
+    } else if (distancePoints < 0) {
+      changedItem.End = startTimeRef.current;
+      let newStart = changedItem.End - Math.round(timeMovedHours * 4) / 4;
+      newStart = getOverlapBorder(newStart, false, true);
+      changedItem.Start = newStart;
+    }
       setDatasource(newState);
-    } 
-
+    }
 
     // else if (
     //   mouseMoveMode.current === "itemMove" ||
@@ -401,8 +412,8 @@ export default function Fnc(props) {
     // ) {
     //   handleItemMoveAndResize(e);
     // }
-  // }
-}
+    // }
+  }
 
   function canvasMouseUp(e) {
     e.preventDefault();
@@ -460,6 +471,19 @@ export default function Fnc(props) {
     return result; // Return the result after the loop
   }
 
+  // window.onclick = function(event) {
+  //   if (!event.target.matches(styles.dropbtn)) {
+  //     var dropdowns = document.getElementsByClassName("dropdownContent");
+  //     var i;
+  //     for (i = 0; i < dropdowns.length; i++) {
+  //       var openDropdown = dropdowns[i];
+  //       if (openDropdown.classList.contains(styles.show)) {
+  //         openDropdown.classList.remove(styles.show);
+  //       }
+  //     }
+  //   }
+  // }
+
   return (
     <div>
       {/* <div style={{ cursor: 'pointer' }}>Click</div> */}
@@ -476,39 +500,54 @@ export default function Fnc(props) {
         }}
         id="canvas"
         ref={canvasRef}
-        onMouseMove={canvasMouseMove}
-        // onMouseMove={canvasMouseHover}
+        // onMouseMove={canvasMouseMove}
+        onMouseMove={canvasMouseHover}
         onMouseDown={canvasMouseDown}
-        onMouseUp={canvasMouseUp}
+        // onMouseUp={canvasMouseUp}
       />
       {datasource.map((item) => (
-        <div
-        ref={spanRef}
-          key={item.ID}
-          data-id={item.ID}
-          data-start={item.Start}
-          data-end={item.End}
-          style={{
-            position: "absolute",
-            left: decimalToXpoint(item.Start),
-            top: "130px",
-            width: decimalToXpoint(item.End) - decimalToXpoint(item.Start),
-            height: "40px",
-            backgroundColor: item.Status == "W" ? "red" : "blue",
-            border:
-              selectedItem &&
-              selectedItem.ID === item.ID &&
-              mouseMoveMode.current !== "itemResizeSplit"
-                ? "2px solid yellow"
-                : "1px solid black",
-            borderRadius: "5px",
-            // cursor: {cursor}
-          }}
-          title={item.Text}
-          // onMouseDown={timespanMouseDown}
-          // onMouseUp={timespanMouseUp}
-          // onMouseMove={timespanMouseMove}
-        ></div>
+        <div>
+          <div>
+            <button
+              ref={spanRef}
+              //className='cursor-w-resize'
+              key={item.ID}
+              data-id={item.ID}
+              data-start={item.Start}
+              data-end={item.End}
+              style={{
+                position: "absolute",
+                left: decimalToXpoint(item.Start),
+                top: "130px",
+                width: decimalToXpoint(item.End) - decimalToXpoint(item.Start),
+                height: "40px",
+                backgroundColor: item.Status == "W" ? "red" : "blue",
+                border:
+                  selectedItem &&
+                  selectedItem.ID === item.ID &&
+                  mouseMoveMode.current !== "itemResizeSplit"
+                    ? "2px solid yellow"
+                    : "1px solid black",
+                borderRadius: "5px",
+                // cursor: {cursor}
+              }}
+              title={item.Text}
+              onContextMenu={handleRightClick}
+              className={styles.dropbtn}
+              // onMouseDown={timespanMouseDown}
+              // onMouseUp={timespanMouseUp}
+              // onMouseMove={timespanMouseMove}
+            >
+              <div id="myDropdown" className={styles.dropdownContent}>
+                {defaultCompanyTasks.map((task, index) => (
+                  <a key={index} href={`taskNumber: ${index}`}>
+                    {task}
+                  </a>
+                ))}
+              </div>
+            </button>
+          </div>
+        </div>
       ))}
       {/* <div style={{position:'absolute', left:'100px', top: '130px', width: '510px', height:'40px', backgroundColor: 'red'}} title='03:45 - 12:30 - Customer: Brødrene Jacobsen: ' ></div> */}
       <div>Time={time}</div>

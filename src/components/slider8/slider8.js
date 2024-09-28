@@ -1,4 +1,12 @@
 import React, { useState, useEffect } from "react";
+import styles from "./slider8.module.css";
+
+const defaultCompanyTasks = [
+  "Bandak: Service on machine",
+  "Bandak: Service on gantry",
+  "Bandak: Service on valves",
+  "Bandak: Service on hydraulics",
+];
 
 const defaultData = [
   {
@@ -303,6 +311,14 @@ export default function Fnc(props) {
     setSelectedItem(null);
   }
 
+  function handleRightClick(e) {
+    e.preventDefault();
+    console.log("handled");
+    let x = document.getElementById("myDropdown");
+    console.log(x);
+    document.getElementById("myDropdown").classList.toggle(styles.show);
+  }
+
   // HW - scrubbing
   // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
   // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
@@ -337,11 +353,10 @@ export default function Fnc(props) {
     startTimeRef.current = xPosToHourDecimal(e);
     endTimeRef.current = e.target.dataset.End;
     let newState = [...datasource];
-    // console.log("endtimeRef:", e.target.dataset)
     let newItem = {
       ID: datasource.length + 1,
       Start: startTimeRef.current,
-      End: endTimeRef.current,
+      End: startTimeRef.current,
       Text: "",
       Status: "",
     };
@@ -354,7 +369,6 @@ export default function Fnc(props) {
 
   function canvasMouseHover(e) {
     e.preventDefault();
-    // if (spanClickedRef.current !== true) {
     removeMoveCursor();
     let relativePos = e.clientX - canvasRef.current.offsetLeft;
     let totalWidth = canvasRef.current.offsetWidth;
@@ -377,10 +391,16 @@ export default function Fnc(props) {
       let timeMovedHours = timeMovedFactor * 24;
       let newState = [...datasource];
       let changedItem = newState.find((item) => item.ID === selectedItem.ID);
+      if (distancePoints > 0) {
       let newEnd = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
       newEnd = getOverlapBorder(newEnd, true, true);
       changedItem.End = newEnd;
-      console.log(newEnd);
+    } else if (distancePoints < 0) {
+      console.log(timeMovedHours)
+      let newStart = Math.round(timeMovedHours * 4) / 4 + changedItem.End;
+      newStart = getOverlapBorder(newStart, false, true);
+      changedItem.Start = newStart;
+    }
       setDatasource(newState);
     }
 
@@ -450,6 +470,19 @@ export default function Fnc(props) {
     return result; // Return the result after the loop
   }
 
+  // window.onclick = function(event) {
+  //   if (!event.target.matches(styles.dropbtn)) {
+  //     var dropdowns = document.getElementsByClassName("dropdownContent");
+  //     var i;
+  //     for (i = 0; i < dropdowns.length; i++) {
+  //       var openDropdown = dropdowns[i];
+  //       if (openDropdown.classList.contains(styles.show)) {
+  //         openDropdown.classList.remove(styles.show);
+  //       }
+  //     }
+  //   }
+  // }
+
   return (
     <div>
       {/* <div style={{ cursor: 'pointer' }}>Click</div> */}
@@ -472,34 +505,48 @@ export default function Fnc(props) {
         // onMouseUp={canvasMouseUp}
       />
       {datasource.map((item) => (
-        <div
-          ref={spanRef}
-          //className='cursor-w-resize'
-          key={item.ID}
-          data-id={item.ID}
-          data-start={item.Start}
-          data-end={item.End}
-          style={{
-            position: "absolute",
-            left: decimalToXpoint(item.Start),
-            top: "130px",
-            width: decimalToXpoint(item.End) - decimalToXpoint(item.Start),
-            height: "40px",
-            backgroundColor: item.Status == "W" ? "red" : "blue",
-            border:
-              selectedItem &&
-              selectedItem.ID === item.ID &&
-              mouseMoveMode.current !== "itemResizeSplit"
-                ? "2px solid yellow"
-                : "1px solid black",
-            borderRadius: "5px",
-            // cursor: {cursor}
-          }}
-          title={item.Text}
-          // onMouseDown={timespanMouseDown}
-          // onMouseUp={timespanMouseUp}
-          // onMouseMove={timespanMouseMove}
-        ></div>
+        <div>
+          <div>
+            <button
+              ref={spanRef}
+              //className='cursor-w-resize'
+              key={item.ID}
+              data-id={item.ID}
+              data-start={item.Start}
+              data-end={item.End}
+              style={{
+                position: "absolute",
+                left: decimalToXpoint(item.Start),
+                top: "130px",
+                width: decimalToXpoint(item.End) - decimalToXpoint(item.Start),
+                height: "40px",
+                backgroundColor: item.Status == "W" ? "red" : "blue",
+                border:
+                  selectedItem &&
+                  selectedItem.ID === item.ID &&
+                  mouseMoveMode.current !== "itemResizeSplit"
+                    ? "2px solid yellow"
+                    : "1px solid black",
+                borderRadius: "5px",
+                // cursor: {cursor}
+              }}
+              title={item.Text}
+              onContextMenu={handleRightClick}
+              className={styles.dropbtn}
+              // onMouseDown={timespanMouseDown}
+              // onMouseUp={timespanMouseUp}
+              // onMouseMove={timespanMouseMove}
+            >
+              <div id="myDropdown" className={styles.dropdownContent}>
+                {defaultCompanyTasks.map((task, index) => (
+                  <a key={index} href={`taskNumber: ${index}`}>
+                    {task}
+                  </a>
+                ))}
+              </div>
+            </button>
+          </div>
+        </div>
       ))}
       {/* <div style={{position:'absolute', left:'100px', top: '130px', width: '510px', height:'40px', backgroundColor: 'red'}} title='03:45 - 12:30 - Customer: Brødrene Jacobsen: ' ></div> */}
       <div>Time={time}</div>
