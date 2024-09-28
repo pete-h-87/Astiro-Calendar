@@ -35,15 +35,19 @@ const startTimeRef = React.createRef();
 const endTimeRef = React.createRef();
 const mouseMoveMode = React.createRef("");
 const mouseDownXPos = React.createRef(0);
+const canvasMouseDownXPos = React.createRef(0);
 const cursorElementRef = React.createRef();
 const resizingStart = React.createRef(false);
 const canvasRef = React.createRef(false);
 const spanRef = React.createRef();
+const spanClickedRef = React.createRef(false);
+const canvasClickedRef = React.createRef(false);
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
   const [selectedItem, setSelectedItem] = useState(null);
   const [datasource, setDatasource] = useState(defaultData);
+  const [canvasClicked, setCanvasClicked] = useState(false);
 
   function decimalToXpoint(hourDecimal) {
     let posFactor = hourDecimal / 24;
@@ -88,6 +92,7 @@ export default function Fnc(props) {
 
   function timespanMouseDown(e) {
     e.preventDefault();
+    spanClickedRef.current = true;
     let clickedItemData = e.target.dataset["id"];
     if (clickedItemData) {
       let id = Number(clickedItemData);
@@ -147,8 +152,10 @@ export default function Fnc(props) {
   }
 
   function timespanMouseMove(e) {
+    // if (spanClickedRef.current === true) {
     e.preventDefault();
     spanRef.current = true;
+    // console.log("move mode:", mouseMoveMode.current)
     if (
       (selectedItem && mouseMoveMode.current === "itemMove") ||
       mouseMoveMode.current === "itemResizeStart" ||
@@ -174,8 +181,11 @@ export default function Fnc(props) {
     for (let index = 0; index < datasource.length; index++) {
       const anElement = datasource[index];
       const target = e.target.dataset;
-      const divId = Number(target.id); 
-      if (e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8 && datasource.some(item => item.ID === divId)) {
+      const divId = Number(target.id);
+      if (
+        e.clientX > e.target.offsetLeft + e.target.offsetWidth * 0.8 &&
+        datasource.some((item) => item.ID === divId)
+      ) {
         if (Number(target.end) === anElement.Start) {
           if (hasNeighbor) {
             cursorClass = "cursor-col-resize";
@@ -186,7 +196,10 @@ export default function Fnc(props) {
         } else {
           cursorClass = "cursor-w-resize";
         }
-      } else if (e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 && datasource.some(item => item.ID === divId)) {
+      } else if (
+        e.clientX < e.target.offsetLeft + e.target.offsetWidth * 0.2 &&
+        datasource.some((item) => item.ID === divId)
+      ) {
         if (Number(target.start) === anElement.End) {
           if (hasNeighbor) {
             cursorClass = "cursor-col-resize";
@@ -205,6 +218,7 @@ export default function Fnc(props) {
       element: e.target,
     };
     e.target.classList.add(cursorClass); //confused on this
+    // }
   }
 
   function handleItemMoveAndResize(e) {
@@ -282,50 +296,52 @@ export default function Fnc(props) {
 
   function timespanMouseUp(e) {
     e.preventDefault();
+    spanClickedRef.current = false;
     spanRef.current = false;
     mouseMoveMode.current = "";
     document.body.classList.remove("loading");
     setSelectedItem(null);
   }
 
-  // HW - attach mouse events to document, and dismount
-  // HW - attach clicking off on document to deselect the div previously selected
   // HW - scrubbing
-
   // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
-  // correct the split handler to operate with three or more adjacent spans
   // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
 
   useEffect(() => {
-    
-    document.addEventListener("mousedown", timespanMouseDown);
-    document.addEventListener("mousemove", timespanMouseMove);
-    document.addEventListener("mouseup", timespanMouseUp);
+    if (!canvasClicked) {
+      document.addEventListener("mousedown", timespanMouseDown);
+      document.addEventListener("mousemove", timespanMouseMove);
+      document.addEventListener("mouseup", timespanMouseUp);
+      return () => {
+        document.removeEventListener("mousedown", timespanMouseDown);
+        document.removeEventListener("mousemove", timespanMouseMove);
+        document.removeEventListener("mouseup", timespanMouseUp);
+      };
+    }
 
-    // document.addEventListener('mousedown', canvasMouseDown);
-    // document.addEventListener("mousemove", canvasMouseMove);
-    // document.addEventListener('mouseup', canvasMouseUp);
-
-    return () => {
-
-      document.removeEventListener("mousedown", timespanMouseDown);
-      document.removeEventListener("mousemove", timespanMouseMove);
-      document.removeEventListener("mouseup", timespanMouseUp);
-
-      // document.removeEventListener('mousedown', canvasMouseDown);
-      // document.removeEventListener("mousemove", canvasMouseMove);
-      // document.removeEventListener('mouseup', canvasMouseUp);
-    };
+    if (canvasClicked) {
+      // document.addEventListener("mousemove", canvasMouseHover)
+      document.addEventListener("mousemove", canvasMouseMove);
+      document.addEventListener("mouseup", canvasMouseUp);
+      return () => {
+        // document.removeEventListener("mousemove", canvasMouseHover)
+        document.removeEventListener("mousemove", canvasMouseMove);
+        document.removeEventListener("mouseup", canvasMouseUp);
+      };
+    }
   });
 
   function canvasMouseDown(e) {
+    e.preventDefault();
+    setCanvasClicked(true);
     startTimeRef.current = xPosToHourDecimal(e);
     endTimeRef.current = e.target.dataset.End;
     let newState = [...datasource];
+    // console.log("endtimeRef:", e.target.dataset)
     let newItem = {
       ID: datasource.length + 1,
       Start: startTimeRef.current,
-      end: endTimeRef.current,
+      End: endTimeRef.current,
       Text: "",
       Status: "",
     };
@@ -333,10 +349,13 @@ export default function Fnc(props) {
     setDatasource(newState);
     setSelectedItem(newItem);
     mouseMoveMode.current = "newItemEnd";
+    canvasMouseDownXPos.current = e.clientX;
   }
 
-  function canvasMouseMove(e) {
-    removeMoveCursor()
+  function canvasMouseHover(e) {
+    e.preventDefault();
+    // if (spanClickedRef.current !== true) {
+    removeMoveCursor();
     let relativePos = e.clientX - canvasRef.current.offsetLeft;
     let totalWidth = canvasRef.current.offsetWidth;
     let positionFactor = relativePos / totalWidth;
@@ -346,14 +365,25 @@ export default function Fnc(props) {
     minutes = minutes * 60;
     minutes = Math.round(minutes / 5) * 5;
     setTime(pad(hours, 2) + ":" + pad(minutes, 2));
+  }
 
+  function canvasMouseMove(e) {
+    e.preventDefault();
     if (mouseMoveMode.current === "newItemEnd") {
-      let end = xPosToHourDecimal(e);
+      let nowPosX = e.clientX;
+      let distancePoints = nowPosX - canvasMouseDownXPos.current;
+      if (Math.abs(distancePoints) < 5) return; //changed here to have it increment by .25, or 15 minutes
+      let timeMovedFactor = distancePoints / 510;
+      let timeMovedHours = timeMovedFactor * 24;
       let newState = [...datasource];
       let changedItem = newState.find((item) => item.ID === selectedItem.ID);
-      changedItem.End = end;
+      let newEnd = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+      newEnd = getOverlapBorder(newEnd, true, true);
+      changedItem.End = newEnd;
+      console.log(newEnd);
       setDatasource(newState);
-    } 
+    }
+
     // else if (
     //   mouseMoveMode.current === "itemMove" ||
     //   mouseMoveMode.current === "itemResizeStart" ||
@@ -361,9 +391,12 @@ export default function Fnc(props) {
     // ) {
     //   handleItemMoveAndResize(e);
     // }
+    // }
   }
 
   function canvasMouseUp(e) {
+    e.preventDefault();
+    setCanvasClicked(false);
     mouseMoveMode.current = "";
     removeMoveCursor();
     setSelectedItem(null);
@@ -433,13 +466,14 @@ export default function Fnc(props) {
         }}
         id="canvas"
         ref={canvasRef}
-        onMouseMove={canvasMouseMove}
+        // onMouseMove={canvasMouseMove}
+        onMouseMove={canvasMouseHover}
         onMouseDown={canvasMouseDown}
-        onMouseUp={canvasMouseUp}
+        // onMouseUp={canvasMouseUp}
       />
       {datasource.map((item) => (
         <div
-        ref={spanRef}
+          ref={spanRef}
           //className='cursor-w-resize'
           key={item.ID}
           data-id={item.ID}
