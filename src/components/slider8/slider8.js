@@ -50,6 +50,7 @@ const canvasRef = React.createRef(false);
 const spanRef = React.createRef();
 const spanClickedRef = React.createRef(false);
 const canvasClickedRef = React.createRef(false);
+const yRef = React.createRef();
 
 export default function Fnc(props) {
   const [time, setTime] = useState();
@@ -90,7 +91,10 @@ export default function Fnc(props) {
           item.ID === selectedItem.ID ? { ...item, Status: "T" } : item
         );
         setDatasource(newState);
-      }
+      } else if (e.key === "Delete" && selectedItem) {
+        const newState = datasource.filter((item) => item.ID !== selectedItem.ID)
+        setDatasource(newState)
+      };
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
@@ -102,6 +106,7 @@ export default function Fnc(props) {
     if (e.button !== 0) return;
     e.preventDefault();
     spanClickedRef.current = true;
+    yRef.current = e.clientY;
     let clickedItemData = e.target.dataset["id"];
     if (clickedItemData) {
       let id = Number(clickedItemData);
@@ -240,12 +245,40 @@ export default function Fnc(props) {
     let clickedSpan = newState.find((item) => item.ID === selectedItem.ID); // now, we can find the ID because
     let newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 4; // the CLICK is first, the movement is second
     let newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 4;
+
+    const currentY = e.clientY;
+    const deltaY = currentY - yRef.current;
+
     if (distancePoints > 0 && mouseMoveMode.current === "itemMove") {
       newEnd = getOverlapBorder(newEnd, true, true);
       newStart = getOverlapBorder(newStart, true, false);
+
+      if (deltaY > 50 && deltaY < 100) {
+        newStart = clickedSpan.Start + (Math.round(timeMovedHours * 4) / 12);
+        newEnd = clickedSpan.End + (Math.round(timeMovedHours * 4) / 12);
+        newEnd = getOverlapBorder(newEnd, true, true);
+        newStart = getOverlapBorder(newStart, true, false);
+
+      } else if (deltaY >= 100) {
+        newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 60;
+        newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 60;
+      }
+
     } else if (distancePoints < 0 && mouseMoveMode.current === "itemMove") {
       newEnd = getOverlapBorder(newEnd, false, false);
       newStart = getOverlapBorder(newStart, false, true);
+
+      if (deltaY > 50 && deltaY < 100) {
+        newStart = clickedSpan.Start + (Math.round(timeMovedHours * 4) / 12);
+        newEnd = clickedSpan.End + (Math.round(timeMovedHours * 4) / 12);
+        newEnd = getOverlapBorder(newEnd, true, true);
+        newStart = getOverlapBorder(newStart, true, false);
+
+      } else if (deltaY >= 100) {
+        newStart = clickedSpan.Start + Math.round(timeMovedHours * 4) / 60;
+        newEnd = clickedSpan.End + Math.round(timeMovedHours * 4) / 60;
+      }
+      
     }
     if (
       mouseMoveMode.current === "itemResizeStart" ||
@@ -314,7 +347,6 @@ export default function Fnc(props) {
   function handleRightClick(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("handled");
     document.getElementById("myDropdown").classList.toggle(styles.show);
 
     // // Get the dropdown element
@@ -333,13 +365,9 @@ export default function Fnc(props) {
     setSelectedItem(clickedSpan);
   }
 
-  function handleTaskClick(e, task) {
+  function handleTaskClick(e, text) {
     // e.preventDefault();
-    console.log("task clicked");
-    console.log(e.target.dataset.Text);
-
-    console.log(selectedItem);
-    selectedItem.Task = task;
+    selectedItem.Text = text;
     setSelectedItem({ ...selectedItem }); // Update state to trigger re-render
     document.getElementById("myDropdown").classList.remove(styles.show); // Hide dropdown
   }
@@ -374,13 +402,14 @@ export default function Fnc(props) {
   });
 
   function canvasMouseDown(e) {
+    if (e.button !== 0) return;
     e.preventDefault();
     setCanvasClicked(true);
     startTimeRef.current = xPosToHourDecimal(e);
     endTimeRef.current = e.target.dataset.End;
     let newState = [...datasource];
     let newItem = {
-      ID: datasource.length + 1,
+      ID: datasource.length > 0 ? Math.max(...datasource.map(item => item.ID)) + 1 : 1,
       Start: startTimeRef.current,
       End: startTimeRef.current,
       Text: "",
@@ -428,15 +457,6 @@ export default function Fnc(props) {
       }
       setDatasource(newState);
     }
-
-    // else if (
-    //   mouseMoveMode.current === "itemMove" ||
-    //   mouseMoveMode.current === "itemResizeStart" ||
-    //   mouseMoveMode.current === "itemResizeEnd"
-    // ) {
-    //   handleItemMoveAndResize(e);
-    // }
-    // }
   }
 
   function canvasMouseUp(e) {
@@ -495,19 +515,6 @@ export default function Fnc(props) {
     return result; // Return the result after the loop
   }
 
-  // window.onclick = function(event) {
-  //   if (!event.target.matches(styles.dropbtn)) {
-  //     var dropdowns = document.getElementsByClassName("dropdownContent");
-  //     var i;
-  //     for (i = 0; i < dropdowns.length; i++) {
-  //       var openDropdown = dropdowns[i];
-  //       if (openDropdown.classList.contains(styles.show)) {
-  //         openDropdown.classList.remove(styles.show);
-  //       }
-  //     }
-  //   }
-  // }
-
   return (
     <div>
       {/* <div style={{ cursor: 'pointer' }}>Click</div> */}
@@ -564,13 +571,13 @@ export default function Fnc(props) {
               // onMouseMove={timespanMouseMove}
             >
               <div id="myDropdown" className={styles.dropdownContent}>
-                {defaultCompanyTasks.map((task, index) => (
+                {defaultCompanyTasks.map((text, index) => (
                   <a
                     key={index}
                     href={`taskNumber: ${index}`}
-                    onMouseDown={(e) => handleTaskClick(e, task)}
+                    onMouseDown={(e) => handleTaskClick(e, text)}
                   >
-                    {task}
+                    {text}
                   </a>
                 ))}
               </div>
