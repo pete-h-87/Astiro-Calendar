@@ -99,6 +99,7 @@ export default function Fnc(props) {
   }, [selectedItem, datasource]);
 
   function timespanMouseDown(e) {
+    if (e.button !== 0) return;
     e.preventDefault();
     spanClickedRef.current = true;
     let clickedItemData = e.target.dataset["id"];
@@ -163,7 +164,6 @@ export default function Fnc(props) {
     // if (spanClickedRef.current === true) {
     e.preventDefault();
     spanRef.current = true;
-    // console.log("move mode:", mouseMoveMode.current)
     if (
       (selectedItem && mouseMoveMode.current === "itemMove") ||
       mouseMoveMode.current === "itemResizeStart" ||
@@ -313,14 +313,40 @@ export default function Fnc(props) {
 
   function handleRightClick(e) {
     e.preventDefault();
+    e.stopPropagation();
     console.log("handled");
-    let x = document.getElementById("myDropdown");
-    console.log(x);
     document.getElementById("myDropdown").classList.toggle(styles.show);
+
+    // // Get the dropdown element
+    // const dropdown = document.getElementById("myDropdown");
+
+    // // Set the position of the dropdown to the mouse event coordinates
+    // dropdown.style.left = `${e.clientX}px`;
+    // dropdown.style.top = `${e.clientY}px`;
+
+    // // Toggle the dropdown visibility
+    // dropdown.classList.toggle(styles.show);
+
+    let clickedItemData = e.target.dataset["id"];
+    let id = Number(clickedItemData);
+    let clickedSpan = datasource.find((item) => item.ID === id);
+    setSelectedItem(clickedSpan);
+  }
+
+  function handleTaskClick(e, task) {
+    // e.preventDefault();
+    console.log("task clicked");
+    console.log(e.target.dataset.Text);
+
+    console.log(selectedItem);
+    selectedItem.Task = task;
+    setSelectedItem({ ...selectedItem }); // Update state to trigger re-render
+    document.getElementById("myDropdown").classList.remove(styles.show); // Hide dropdown
   }
 
   // HW - scrubbing
-  // HW - create a drop down selector with random lines to pick from ("line1, line2, etc") - mimicing service order selector
+  // HW - middle click to set and scrub start position
+  // HW - clean up right click
   // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
 
   useEffect(() => {
@@ -392,15 +418,14 @@ export default function Fnc(props) {
       let newState = [...datasource];
       let changedItem = newState.find((item) => item.ID === selectedItem.ID);
       if (distancePoints > 0) {
-      let newEnd = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
-      newEnd = getOverlapBorder(newEnd, true, true);
-      changedItem.End = newEnd;
-    } else if (distancePoints < 0) {
-      console.log(timeMovedHours)
-      let newStart = Math.round(timeMovedHours * 4) / 4 + changedItem.End;
-      newStart = getOverlapBorder(newStart, false, true);
-      changedItem.Start = newStart;
-    }
+        let newEnd = changedItem.Start + Math.round(timeMovedHours * 4) / 4;
+        newEnd = getOverlapBorder(newEnd, true, true);
+        changedItem.End = newEnd;
+      } else if (distancePoints < 0) {
+        let newStart = Math.round(timeMovedHours * 4) / 4 + changedItem.End;
+        newStart = getOverlapBorder(newStart, false, true);
+        changedItem.Start = newStart;
+      }
       setDatasource(newState);
     }
 
@@ -514,6 +539,7 @@ export default function Fnc(props) {
               data-id={item.ID}
               data-start={item.Start}
               data-end={item.End}
+              data-text={item.Text}
               style={{
                 position: "absolute",
                 left: decimalToXpoint(item.Start),
@@ -539,7 +565,11 @@ export default function Fnc(props) {
             >
               <div id="myDropdown" className={styles.dropdownContent}>
                 {defaultCompanyTasks.map((task, index) => (
-                  <a key={index} href={`taskNumber: ${index}`}>
+                  <a
+                    key={index}
+                    href={`taskNumber: ${index}`}
+                    onMouseDown={(e) => handleTaskClick(e, task)}
+                  >
                     {task}
                   </a>
                 ))}
