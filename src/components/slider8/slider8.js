@@ -285,12 +285,18 @@ export default function Fnc(props) {
       mouseMoveMode.current === "itemMove"
     ) {
       clickedSpan.Start = newStart;
+      if (clickedSpan.Start >= (clickedSpan.End - .5)) {
+        clickedSpan.Start = (clickedSpan.End - .5);
+      }
     }
     if (
       mouseMoveMode.current === "itemResizeEnd" ||
       mouseMoveMode.current === "itemMove"
     ) {
       clickedSpan.End = newEnd;
+      if (clickedSpan.End <= (clickedSpan.Start + .5)) {
+        clickedSpan.End = (clickedSpan.Start + .5);
+      }
     }
     if (distancePoints < 0 && mouseMoveMode.current === "itemResizeStart") {
       newStart = getOverlapBorder(newStart, false, true);
@@ -372,10 +378,14 @@ export default function Fnc(props) {
     document.getElementById("myDropdown").classList.remove(styles.show); // Hide dropdown
   }
 
+
+
   // HW - scrubbing
-  // HW - middle click to set and scrub start position
+  // HW - middle click to set and scrub start position?
   // HW - clean up right click
-  // HW - limit ability to collapse spans all the way.  minimum 15 minutes?
+  // HW - have the time show only in the parent div, not the document?
+  // HW - when scrubbing, round the end to match bumping into a neighbor as to keep the same length of time
+  // HW - devExtreme - abilitiy to copy a span and move it to another day's div
 
   useEffect(() => {
     if (!canvasClicked) {
@@ -490,9 +500,7 @@ export default function Fnc(props) {
             }
           } else if (leadingEdge === false) {
             if (
-              selectedItem.End >= element.Start &&
-              selectedItem.End <= element.End
-            ) {
+              selectedItem.End >= element.Start && selectedItem.End <= element.End) {
               result = lastValidStartTime;
             }
           }
