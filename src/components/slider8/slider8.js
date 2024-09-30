@@ -379,13 +379,25 @@ export default function Fnc(props) {
   // HW - scrubbing
   // HW - middle click to set and scrub start position?
   // HW - clean up right click
+  
   // HW - have the time show only in the parent div, not the document?
   // HW - when scrubbing, round the end to match bumping into a neighbor as to keep the same length of time
   // HW - devExtreme - abilitiy to copy a span and move it to another day's div
 
+  // HW - tooltip, info div following the mouse for time on canvas move
+  // HW - double up the renders - correct problems
+  // HW - combine all useEffects into one, and add an empty array [] for it to fire just once, not all the time
+  // HW - change to have addEventListener go only ONCE (using the []) - by combinging all functions into their respective mouse functions
+  // HW - rmeove title and hour shower - change to mouse box that follow mouse (a div? z-index 999 floating with mouse) position: absolute - top and left plus some pixels above the mouse
+
+
+  // ask camilla for CSS
+
+
+
   useEffect(() => {
     if (!canvasClicked) {
-      document.addEventListener("mousedown", timespanMouseDown);
+      document.addEventListener("mousedown", timespanMouseDown); // right now, it's continually adding. change that
       document.addEventListener("mousemove", timespanMouseMove);
       document.addEventListener("mouseup", timespanMouseUp);
       return () => {
@@ -547,7 +559,8 @@ export default function Fnc(props) {
       {/* <div style={{ cursor: 'pointer' }}>Click</div> */}
       <div style={{ margin: "100px 0 0 100px" }}>
         00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23
-      </div>
+      </div>  
+      {/* render the above div depending on day selected */}
       <div
         style={{
           width: "510px",
