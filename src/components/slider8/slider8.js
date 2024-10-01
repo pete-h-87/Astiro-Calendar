@@ -396,7 +396,7 @@ export default function Fnc(props) {
 
 
   useEffect(() => {
-    if (!canvasClicked) {
+    if (!canvasClicked) { 
       document.addEventListener("mousedown", timespanMouseDown); // right now, it's continually adding. change that
       document.addEventListener("mousemove", timespanMouseMove);
       document.addEventListener("mouseup", timespanMouseUp);
